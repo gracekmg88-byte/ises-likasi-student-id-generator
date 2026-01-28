@@ -2,8 +2,8 @@ const ADMIN_KEY = "ises_admin_auth";
 
 // Credentials admin par défaut (à remplacer par une vraie auth en production)
 const DEFAULT_ADMIN = {
-  username: "admin",
-  password: "ises2025",
+  username: "gracekot20@gmail.com",
+  password: "GRAkey245",
 };
 
 export const login = (username: string, password: string): boolean => {

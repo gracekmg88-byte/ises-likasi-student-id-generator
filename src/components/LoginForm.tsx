@@ -64,17 +64,17 @@ const LoginForm = ({ onLoginSuccess }: LoginFormProps) => {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="username" className="text-sm font-medium">
-                Nom d'utilisateur
+                Adresse email
               </Label>
               <div className="relative">
                 <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   id="username"
-                  type="text"
+                  type="email"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   className="pl-10 input-institutional"
-                  placeholder="admin"
+                  placeholder="exemple@email.com"
                   required
                 />
               </div>
