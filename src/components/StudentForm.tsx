@@ -16,6 +16,10 @@ const StudentForm = ({ onStudentAdded }: StudentFormProps) => {
   const [nom, setNom] = useState("");
   const [prenom, setPrenom] = useState("");
   const [photo, setPhoto] = useState<string>("");
+  const [faculte, setFaculte] = useState("Gestion Informatique");
+  const [promotion, setPromotion] = useState("BAC 1");
+  const [anneeAcademique, setAnneeAcademique] = useState("2025–2026");
+  const [dateExpiration, setDateExpiration] = useState("12/2026");
   const [isLoading, setIsLoading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -55,10 +59,10 @@ const StudentForm = ({ onStudentAdded }: StudentFormProps) => {
         nom: nom.trim().toUpperCase(),
         prenom: prenom.trim(),
         photo,
-        faculte: "Gestion Informatique",
-        promotion: "BAC 1",
-        anneeAcademique: "2025–2026",
-        dateExpiration: "12/2026",
+        faculte: faculte.trim(),
+        promotion: promotion.trim(),
+        anneeAcademique: anneeAcademique.trim(),
+        dateExpiration: dateExpiration.trim(),
       });
 
       onStudentAdded(student);
@@ -176,27 +180,67 @@ const StudentForm = ({ onStudentAdded }: StudentFormProps) => {
             />
           </div>
 
-          {/* Informations fixes (lecture seule) */}
-          <div className="bg-muted/50 rounded-lg p-4 space-y-2">
-            <h4 className="text-sm font-semibold text-foreground mb-3">
+          {/* Informations académiques */}
+          <div className="bg-muted/50 rounded-lg p-4 space-y-4">
+            <h4 className="text-sm font-semibold text-foreground">
               Informations académiques
             </h4>
-            <div className="grid grid-cols-2 gap-3 text-sm">
-              <div>
-                <span className="text-muted-foreground">Faculté:</span>
-                <p className="font-medium">Gestion Informatique</p>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="faculte" className="text-sm font-medium">
+                  Faculté / Option <span className="text-destructive">*</span>
+                </Label>
+                <Input
+                  id="faculte"
+                  type="text"
+                  value={faculte}
+                  onChange={(e) => setFaculte(e.target.value)}
+                  className="input-institutional"
+                  placeholder="Ex: Gestion Informatique"
+                  required
+                />
               </div>
-              <div>
-                <span className="text-muted-foreground">Promotion:</span>
-                <p className="font-medium">BAC 1</p>
+              <div className="space-y-2">
+                <Label htmlFor="promotion" className="text-sm font-medium">
+                  Promotion <span className="text-destructive">*</span>
+                </Label>
+                <Input
+                  id="promotion"
+                  type="text"
+                  value={promotion}
+                  onChange={(e) => setPromotion(e.target.value)}
+                  className="input-institutional"
+                  placeholder="Ex: BAC 1"
+                  required
+                />
               </div>
-              <div>
-                <span className="text-muted-foreground">Année académique:</span>
-                <p className="font-medium">2025–2026</p>
+              <div className="space-y-2">
+                <Label htmlFor="anneeAcademique" className="text-sm font-medium">
+                  Année académique <span className="text-destructive">*</span>
+                </Label>
+                <Input
+                  id="anneeAcademique"
+                  type="text"
+                  value={anneeAcademique}
+                  onChange={(e) => setAnneeAcademique(e.target.value)}
+                  className="input-institutional"
+                  placeholder="Ex: 2025–2026"
+                  required
+                />
               </div>
-              <div>
-                <span className="text-muted-foreground">Expiration:</span>
-                <p className="font-medium">12/2026</p>
+              <div className="space-y-2">
+                <Label htmlFor="dateExpiration" className="text-sm font-medium">
+                  Date d'expiration <span className="text-destructive">*</span>
+                </Label>
+                <Input
+                  id="dateExpiration"
+                  type="text"
+                  value={dateExpiration}
+                  onChange={(e) => setDateExpiration(e.target.value)}
+                  className="input-institutional"
+                  placeholder="Ex: 12/2026"
+                  required
+                />
               </div>
             </div>
           </div>
