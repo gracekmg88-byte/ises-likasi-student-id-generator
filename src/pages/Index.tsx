@@ -1,38 +1,61 @@
 import { useState, useEffect } from "react";
-import { Student } from "@/types/student";
+import { Student, Institution, CardTemplate } from "@/types/student";
 import { getStudents } from "@/lib/studentStore";
-import { generateStudentCardPDF, getImageBase64 } from "@/lib/pdfGenerator";
-import { logout, isAuthenticated } from "@/lib/auth";
+import { getInstitutions, getDefaultInstitution, getInstitutionById } from "@/lib/institutionStore";
+import { getTemplates, getDefaultTemplate, getTemplateById } from "@/lib/templateStore";
+import { generateStudentCardPDF } from "@/lib/pdfGenerator";
+import { logout, isAuthenticated, getCurrentAdmin } from "@/lib/adminStore";
 import LoginForm from "@/components/LoginForm";
 import StudentForm from "@/components/StudentForm";
 import StudentList from "@/components/StudentList";
 import StudentCard from "@/components/StudentCard";
+import InstitutionManager from "@/components/InstitutionManager";
+import TemplateSelector from "@/components/TemplateSelector";
+import AdminManager from "@/components/AdminManager";
+import ChangePasswordDialog from "@/components/ChangePasswordDialog";
 import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { LogOut, GraduationCap, QrCode, Download } from "lucide-react";
+import { LogOut, GraduationCap, QrCode, Download, Settings, Users, Building2 } from "lucide-react";
 import { toast } from "sonner";
 import { Link } from "react-router-dom";
-import logoIses from "@/assets/logo-ises.jpg";
 
 const Index = () => {
   const [authenticated, setAuthenticated] = useState(false);
   const [students, setStudents] = useState<Student[]>([]);
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  
+  // Institution et Template sélectionnés
+  const [selectedInstitutionId, setSelectedInstitutionId] = useState<string>("");
+  const [selectedTemplateId, setSelectedTemplateId] = useState<string>("classic");
+  
+  // Admin actuel
+  const [currentAdmin, setCurrentAdmin] = useState<ReturnType<typeof getCurrentAdmin>>(undefined);
 
   useEffect(() => {
-    setAuthenticated(isAuthenticated());
+    const auth = isAuthenticated();
+    setAuthenticated(auth);
+    if (auth) {
+      setCurrentAdmin(getCurrentAdmin());
+    }
     setIsLoading(false);
   }, []);
 
   useEffect(() => {
     if (authenticated) {
       refreshStudents();
+      // Initialiser l'institution par défaut
+      const defaultInst = getDefaultInstitution();
+      setSelectedInstitutionId(defaultInst.id);
+      // Initialiser le template par défaut
+      const defaultTemplate = getDefaultTemplate();
+      setSelectedTemplateId(defaultTemplate.id);
     }
   }, [authenticated]);
 
@@ -42,12 +65,14 @@ const Index = () => {
 
   const handleLoginSuccess = () => {
     setAuthenticated(true);
+    setCurrentAdmin(getCurrentAdmin());
   };
 
   const handleLogout = () => {
     logout();
     setAuthenticated(false);
     setStudents([]);
+    setCurrentAdmin(undefined);
   };
 
   const handleStudentAdded = (student: Student) => {
@@ -58,8 +83,9 @@ const Index = () => {
   const handleGeneratePDF = async (student: Student) => {
     try {
       toast.loading("Génération du PDF en cours...");
-      const logoBase64 = await getImageBase64(logoIses);
-      await generateStudentCardPDF(student, logoBase64);
+      const institution = getInstitutionById(student.institutionId || selectedInstitutionId) || getDefaultInstitution();
+      const template = getTemplateById(selectedTemplateId) || getDefaultTemplate();
+      await generateStudentCardPDF(student, institution, template);
       toast.dismiss();
       toast.success("Carte d'étudiant générée avec succès !");
     } catch (error) {
@@ -67,6 +93,14 @@ const Index = () => {
       toast.error("Erreur lors de la génération du PDF");
       console.error(error);
     }
+  };
+
+  const getSelectedInstitution = (): Institution => {
+    return getInstitutionById(selectedInstitutionId) || getDefaultInstitution();
+  };
+
+  const getSelectedTemplate = (): CardTemplate => {
+    return getTemplateById(selectedTemplateId) || getDefaultTemplate();
   };
 
   if (isLoading) {
@@ -88,21 +122,26 @@ const Index = () => {
         <div className="container mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full overflow-hidden bg-white p-0.5">
-                <img
-                  src={logoIses}
-                  alt="Logo ISES"
-                  className="w-full h-full object-contain"
-                />
+              <div className="w-10 h-10 rounded-full overflow-hidden bg-white p-0.5 flex items-center justify-center">
+                {getSelectedInstitution().logoGauche ? (
+                  <img
+                    src={getSelectedInstitution().logoGauche}
+                    alt="Logo"
+                    className="w-full h-full object-contain"
+                  />
+                ) : (
+                  <span className="text-primary text-xs font-bold">ISES</span>
+                )}
               </div>
               <div>
-                <h1 className="text-lg font-serif font-bold">ISES-LIKASI</h1>
+                <h1 className="text-lg font-serif font-bold">Gestion Cartes Étudiants</h1>
                 <p className="text-xs text-primary-foreground/80">
-                  Gestion des Cartes d'Étudiants
+                  {currentAdmin?.nom || "Administrateur"}
                 </p>
               </div>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
+              <ChangePasswordDialog />
               <Link to="/verification">
                 <Button
                   variant="outline"
@@ -128,39 +167,74 @@ const Index = () => {
       </header>
 
       {/* Main content */}
-      <main className="container mx-auto px-4 py-8">
-        {/* Stats */}
-        <div className="mb-8">
-          <div className="bg-card rounded-xl shadow-lg p-6 border border-primary/10">
-            <div className="flex items-center gap-4">
-              <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center">
-                <GraduationCap className="h-7 w-7 text-primary" />
-              </div>
-              <div>
-                <h2 className="text-3xl font-bold text-primary">{students.length}</h2>
-                <p className="text-muted-foreground">Étudiants enregistrés</p>
+      <main className="container mx-auto px-4 py-6">
+        <Tabs defaultValue="students" className="space-y-6">
+          <TabsList className="grid w-full max-w-md grid-cols-3">
+            <TabsTrigger value="students" className="gap-2">
+              <GraduationCap className="h-4 w-4" />
+              <span className="hidden sm:inline">Étudiants</span>
+            </TabsTrigger>
+            <TabsTrigger value="settings" className="gap-2">
+              <Settings className="h-4 w-4" />
+              <span className="hidden sm:inline">Configuration</span>
+            </TabsTrigger>
+            <TabsTrigger value="admins" className="gap-2">
+              <Users className="h-4 w-4" />
+              <span className="hidden sm:inline">Admins</span>
+            </TabsTrigger>
+          </TabsList>
+
+          {/* Tab Étudiants */}
+          <TabsContent value="students" className="space-y-6">
+            {/* Stats */}
+            <div className="bg-card rounded-xl shadow-lg p-6 border border-primary/10">
+              <div className="flex items-center gap-4">
+                <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center">
+                  <GraduationCap className="h-7 w-7 text-primary" />
+                </div>
+                <div>
+                  <h2 className="text-3xl font-bold text-primary">{students.length}</h2>
+                  <p className="text-muted-foreground">Étudiants enregistrés</p>
+                </div>
               </div>
             </div>
-          </div>
-        </div>
 
-        {/* Grid */}
-        <div className="grid lg:grid-cols-2 gap-8">
-          {/* Formulaire */}
-          <div>
-            <StudentForm onStudentAdded={handleStudentAdded} />
-          </div>
+            {/* Grid */}
+            <div className="grid lg:grid-cols-2 gap-6">
+              <StudentForm 
+                onStudentAdded={handleStudentAdded} 
+                selectedInstitutionId={selectedInstitutionId}
+              />
+              <StudentList
+                students={students}
+                onRefresh={refreshStudents}
+                onSelectStudent={setSelectedStudent}
+                onGeneratePDF={handleGeneratePDF}
+              />
+            </div>
+          </TabsContent>
 
-          {/* Liste */}
-          <div>
-            <StudentList
-              students={students}
-              onRefresh={refreshStudents}
-              onSelectStudent={setSelectedStudent}
-              onGeneratePDF={handleGeneratePDF}
-            />
-          </div>
-        </div>
+          {/* Tab Configuration */}
+          <TabsContent value="settings" className="space-y-6">
+            <div className="grid lg:grid-cols-2 gap-6">
+              <InstitutionManager
+                selectedInstitutionId={selectedInstitutionId}
+                onSelectInstitution={setSelectedInstitutionId}
+              />
+              <TemplateSelector
+                selectedTemplateId={selectedTemplateId}
+                onSelectTemplate={setSelectedTemplateId}
+              />
+            </div>
+          </TabsContent>
+
+          {/* Tab Admins */}
+          <TabsContent value="admins">
+            <div className="max-w-xl">
+              <AdminManager />
+            </div>
+          </TabsContent>
+        </Tabs>
       </main>
 
       {/* Modal aperçu carte */}
@@ -173,7 +247,11 @@ const Index = () => {
           </DialogHeader>
           {selectedStudent && (
             <div className="space-y-4">
-              <StudentCard student={selectedStudent} />
+              <StudentCard 
+                student={selectedStudent} 
+                institution={getSelectedInstitution()}
+                template={getSelectedTemplate()}
+              />
               <div className="flex gap-3 justify-end">
                 <Button
                   variant="outline"
