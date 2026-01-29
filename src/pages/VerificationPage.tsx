@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { Student } from "@/types/student";
 import { getStudentById } from "@/lib/studentStore";
+import { getInstitutionById, getDefaultInstitution } from "@/lib/institutionStore";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -14,7 +15,6 @@ import {
   Calendar,
   Building,
 } from "lucide-react";
-import logoIses from "@/assets/logo-ises.jpg";
 
 const VerificationPage = () => {
   const { id } = useParams<{ id: string }>();
@@ -38,6 +38,10 @@ const VerificationPage = () => {
     checkStudent();
   }, [id]);
 
+  const institution = student?.institutionId 
+    ? getInstitutionById(student.institutionId) || getDefaultInstitution()
+    : getDefaultInstitution();
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5">
       {/* Header */}
@@ -45,15 +49,27 @@ const VerificationPage = () => {
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-full overflow-hidden bg-white p-1">
-                <img
-                  src={logoIses}
-                  alt="Logo ISES"
-                  className="w-full h-full object-contain"
-                />
+              <div className="w-12 h-12 rounded-full overflow-hidden bg-white p-1 flex items-center justify-center">
+                {institution.logoGauche ? (
+                  <img
+                    src={institution.logoGauche}
+                    alt="Logo"
+                    className="w-full h-full object-contain"
+                  />
+                ) : institution.logoDroite ? (
+                  <img
+                    src={institution.logoDroite}
+                    alt="Logo"
+                    className="w-full h-full object-contain"
+                  />
+                ) : (
+                  <span className="text-primary text-sm font-bold">LOGO</span>
+                )}
               </div>
               <div>
-                <h1 className="text-xl font-serif font-bold">ISES-LIKASI</h1>
+                <h1 className="text-xl font-serif font-bold truncate max-w-[200px] sm:max-w-none">
+                  {institution.nom.length > 30 ? institution.nom.substring(0, 30) + "..." : institution.nom}
+                </h1>
                 <p className="text-xs text-primary-foreground/80">
                   Vérification des Cartes d'Étudiants
                 </p>
@@ -101,6 +117,9 @@ const VerificationPage = () => {
                 <CardTitle className="font-serif text-primary text-xl">
                   Informations de l'Étudiant
                 </CardTitle>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {institution.nom}
+                </p>
               </CardHeader>
 
               <CardContent className="space-y-6">
