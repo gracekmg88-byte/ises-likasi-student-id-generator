@@ -59,7 +59,7 @@ export const generateStudentCardPDF = async (
 
   const colors = getColors();
 
-  // Generate QR Code
+  // Generate QR Code - haute résolution pour impression
   let qrDataUrl: string = "";
   try {
     if (student.customQrCode) {
@@ -67,7 +67,7 @@ export const generateStudentCardPDF = async (
     } else {
       const verificationUrl = `${window.location.origin}/verification/${student.qrCodeData}`;
       qrDataUrl = await QRCode.toDataURL(verificationUrl, {
-        width: 200,
+        width: 400, // Haute résolution pour impression
         margin: 1,
         color: { dark: "#1a365d", light: "#ffffff" },
       });
@@ -259,35 +259,35 @@ const renderClassicRecto = async (
   doc.setFillColor(...colors.primary);
   doc.rect(1.5, 1.5, width - 3, 11, "F");
 
-  // Logo gauche dans cercle blanc rempli - logo agrandi pour remplir le cercle
+  // Logo gauche dans cercle blanc rempli - logo agrandi pour remplir le cercle (comme le verso)
   doc.setFillColor(255, 255, 255);
-  doc.circle(8, 7, 5, "F");
+  doc.circle(8, 7, 5.5, "F");
   if (institution.logoGauche) {
     try {
-      // Logo agrandi pour remplir tout le cercle (rayon 5mm = diamètre 10mm)
-      doc.addImage(institution.logoGauche, "PNG", 3, 2, 10, 10);
+      // Logo agrandi pour remplir tout le cercle - dimensions identiques au verso
+      doc.addImage(institution.logoGauche, "PNG", 2.5, 1.5, 11, 11);
     } catch (e) {}
   }
 
-  // Logo droite dans cercle blanc rempli - logo agrandi pour remplir le cercle
+  // Logo droite dans cercle blanc rempli - logo agrandi pour remplir le cercle (comme le verso)
   doc.setFillColor(255, 255, 255);
-  doc.circle(width - 8, 7, 5, "F");
+  doc.circle(width - 8, 7, 5.5, "F");
   if (institution.logoDroite) {
     try {
-      doc.addImage(institution.logoDroite, "PNG", width - 13, 2, 10, 10);
+      doc.addImage(institution.logoDroite, "PNG", width - 13.5, 1.5, 11, 11);
     } catch (e) {}
   } else if (institution.logoGauche) {
     try {
-      doc.addImage(institution.logoGauche, "PNG", width - 13, 2, 10, 10);
+      doc.addImage(institution.logoGauche, "PNG", width - 13.5, 1.5, 11, 11);
     } catch (e) {}
   }
 
-  // Texte en-tête
+  // Texte en-tête - titre ENSEIGNEMENT SUPÉRIEUR plus visible
   doc.setTextColor(255, 255, 255);
-  doc.setFontSize(3.5);
+  doc.setFontSize(4.5);
   doc.setFont("helvetica", "bold");
   const tutelleParts = institution.tutelle.split("–");
-  doc.text(tutelleParts[0]?.trim() || "RÉPUBLIQUE DÉMOCRATIQUE DU CONGO", width / 2, 3.5, { align: "center" });
+  doc.text(tutelleParts[0]?.trim() || "ENSEIGNEMENT SUPÉRIEUR ET UNIVERSITAIRE", width / 2, 4, { align: "center" });
 
   // Nom institution
   doc.setTextColor(255, 255, 255);
@@ -315,7 +315,8 @@ const renderClassicRecto = async (
       doc.setDrawColor(...colors.primary);
       doc.setLineWidth(0.5);
       doc.rect(photoX - 0.5, photoY - 0.5, photoW + 1, photoH + 1);
-      doc.addImage(student.photo, "JPEG", photoX, photoY, photoW, photoH);
+      // Photo avec compression minimale pour conserver la qualité
+      doc.addImage(student.photo, "JPEG", photoX, photoY, photoW, photoH, undefined, "FAST");
     } catch (e) {}
   }
 
@@ -473,7 +474,7 @@ const renderModernRecto = async (
     try {
       doc.setFillColor(...colors.primary);
       doc.roundedRect(photoX - 0.5, photoY - 0.5, 19, 23, 1, 1, "F");
-      doc.addImage(student.photo, "JPEG", photoX, photoY, 18, 22);
+      doc.addImage(student.photo, "JPEG", photoX, photoY, 18, 22, undefined, "FAST");
     } catch (e) {}
   }
 
@@ -643,7 +644,7 @@ const renderAdvancedRecto = async (
     try {
       doc.setFillColor(...colors.secondary);
       doc.roundedRect(photoX - 0.5, photoY - 0.5, 19, 23, 0.8, 0.8, "F");
-      doc.addImage(student.photo, "JPEG", photoX, photoY, 18, 22);
+      doc.addImage(student.photo, "JPEG", photoX, photoY, 18, 22, undefined, "FAST");
     } catch (e) {}
   }
 
@@ -829,7 +830,7 @@ const renderPremiumRecto = async (
     try {
       doc.setFillColor(...colors.secondary);
       doc.roundedRect(photoX - 0.5, photoY - 0.5, 19, 23, 0.8, 0.8, "F");
-      doc.addImage(student.photo, "JPEG", photoX, photoY, 18, 22);
+      doc.addImage(student.photo, "JPEG", photoX, photoY, 18, 22, undefined, "FAST");
     } catch (e) {}
   }
 
@@ -909,18 +910,13 @@ const renderPremiumRecto = async (
   // Footer sombre avec gradient
   const footerY = height - 9;
   
-  // Label signature
+  // Label signature - UNIQUEMENT le label jaune, pas de texte en dessous (suppression du doublon)
   doc.setFillColor(...colors.secondary);
-  doc.roundedRect(4, footerY, 14, 3, 0.5, 0.5, "F");
+  doc.roundedRect(4, footerY, 18, 3.5, 0.5, 0.5, "F");
   doc.setTextColor(30, 41, 59);
-  doc.setFontSize(2.8);
+  doc.setFontSize(3);
   doc.setFont("helvetica", "bold");
-  doc.text(institution.mentionSignature.split(" ")[0]?.toUpperCase() || "RECTEUR", 5.5, footerY + 2);
-
-  doc.setTextColor(...colors.secondary);
-  doc.setFontSize(3.2);
-  doc.setFont("helvetica", "normal");
-  doc.text(institution.mentionSignature, 4, footerY + 6);
+  doc.text(institution.mentionSignature.toUpperCase(), 5.5, footerY + 2.3);
 
   // Label EXPIRE LE
   doc.setFillColor(...colors.secondary);

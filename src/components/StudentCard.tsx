@@ -145,8 +145,8 @@ const StudentCard = ({ student, institution, template, side = "recto" }: Student
     <div className="relative h-full bg-gradient-to-br from-primary/5 via-card to-secondary/10 rounded-lg shadow-2xl border-4 border-primary overflow-hidden">
       <div className="bg-gradient-to-r from-primary to-primary/90 text-primary-foreground py-1.5 px-3">
         <div className="flex items-center justify-between">
-          {/* Logo gauche - agrandi pour remplir le cercle */}
-          <div className="w-10 h-10 rounded-full overflow-hidden bg-white flex items-center justify-center">
+          {/* Logo gauche - agrandi pour remplir le cercle (comme le verso) */}
+          <div className="w-11 h-11 rounded-full overflow-hidden bg-white flex items-center justify-center">
             {institution.logoGauche ? (
               <img src={institution.logoGauche} alt="Logo" className="w-full h-full object-cover" />
             ) : (
@@ -155,7 +155,7 @@ const StudentCard = ({ student, institution, template, side = "recto" }: Student
           </div>
           
           <div className="text-center flex-1 px-2">
-            <p className="text-[6px] font-bold tracking-wider uppercase leading-tight">
+            <p className="text-[8px] font-bold tracking-wider uppercase leading-tight">
               {institution.tutelle.split("–")[0]}
             </p>
             <p className="text-[6px] font-semibold text-[#f5c538]">
@@ -166,8 +166,8 @@ const StudentCard = ({ student, institution, template, side = "recto" }: Student
             </p>
           </div>
           
-          {/* Logo droite - agrandi pour remplir le cercle */}
-          <div className="w-10 h-10 rounded-full overflow-hidden bg-white border-2 border-secondary">
+          {/* Logo droite - agrandi pour remplir le cercle (comme le verso) */}
+          <div className="w-11 h-11 rounded-full overflow-hidden bg-white border-2 border-secondary">
             {institution.logoDroite ? (
               <img src={institution.logoDroite} alt="Logo" className="w-full h-full object-cover" />
             ) : institution.logoGauche ? (
