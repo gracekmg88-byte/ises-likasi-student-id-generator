@@ -18,6 +18,7 @@ import ChangePasswordDialog from "@/components/ChangePasswordDialog";
 import PaymentSection from "@/components/PaymentSection";
 import PaymentSettingsManager from "@/components/PaymentSettingsManager";
 import AdminProfilePhoto from "@/components/AdminProfilePhoto";
+import StorageManager from "@/components/StorageManager";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
@@ -428,6 +429,13 @@ const Index = () => {
                 isPremium={isAdminMode || currentUser?.isPremium || false}
               />
             </div>
+            
+            {/* Gestion du stockage - Admin uniquement */}
+            {isAdminMode && (
+              <div className="grid lg:grid-cols-2 gap-6">
+                <StorageManager />
+              </div>
+            )}
           </TabsContent>
 
           {/* Tab Premium (utilisateurs uniquement) */}
