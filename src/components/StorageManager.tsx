@@ -82,8 +82,11 @@ const StorageManager = () => {
 
   const handleClearAll = () => {
     clearAllStudents();
-    refreshStorageInfo();
-    toast.success("Toutes les données étudiants ont été supprimées.");
+    // Force un délai pour s'assurer que localStorage est vidé
+    setTimeout(() => {
+      refreshStorageInfo();
+      toast.success("Stockage vidé ! Toutes les données ont été supprimées.");
+    }, 100);
   };
 
   return (
