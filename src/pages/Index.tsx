@@ -17,6 +17,7 @@ import UserManager from "@/components/UserManager";
 import ChangePasswordDialog from "@/components/ChangePasswordDialog";
 import PaymentSection from "@/components/PaymentSection";
 import PaymentSettingsManager from "@/components/PaymentSettingsManager";
+import AdminProfilePhoto from "@/components/AdminProfilePhoto";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
@@ -105,6 +106,10 @@ const Index = () => {
     } else {
       setCurrentUser(getCurrentUser());
     }
+  };
+
+  const refreshAdmin = () => {
+    setCurrentAdmin(getCurrentAdmin());
   };
 
   const handleLogout = () => {
@@ -203,17 +208,22 @@ const Index = () => {
         <div className="container mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full overflow-hidden bg-white p-0.5 flex items-center justify-center">
-                {getSelectedInstitution().logoGauche ? (
-                  <img
-                    src={getSelectedInstitution().logoGauche}
-                    alt="Logo"
-                    className="w-full h-full object-contain"
-                  />
-                ) : (
-                  <span className="text-primary text-xs font-bold">KMG</span>
-                )}
-              </div>
+              {/* Photo profil admin ou logo institution */}
+              {isAdminMode && currentAdmin ? (
+                <AdminProfilePhoto admin={currentAdmin} onUpdate={refreshAdmin} />
+              ) : (
+                <div className="w-10 h-10 rounded-full overflow-hidden bg-white p-0.5 flex items-center justify-center">
+                  {getSelectedInstitution().logoGauche ? (
+                    <img
+                      src={getSelectedInstitution().logoGauche}
+                      alt="Logo"
+                      className="w-full h-full object-contain"
+                    />
+                  ) : (
+                    <span className="text-primary text-xs font-bold">KMG</span>
+                  )}
+                </div>
+              )}
               <div>
                 <h1 className="text-lg font-serif font-bold">KMG – Cartes Étudiants</h1>
                 <div className="flex items-center gap-2">

@@ -25,6 +25,7 @@ interface StudentFormProps {
 const StudentForm = ({ onStudentAdded, selectedInstitutionId }: StudentFormProps) => {
   const [nom, setNom] = useState("");
   const [prenom, setPrenom] = useState("");
+  const [matricule, setMatricule] = useState("");
   const [photo, setPhoto] = useState<string>("");
   const [faculte, setFaculte] = useState("Gestion Informatique");
   const [promotion, setPromotion] = useState("BAC 1");
@@ -71,6 +72,7 @@ const StudentForm = ({ onStudentAdded, selectedInstitutionId }: StudentFormProps
   const resetForm = () => {
     setNom("");
     setPrenom("");
+    setMatricule("");
     setPhoto("");
     setFaculte("Gestion Informatique");
     setPromotion("BAC 1");
@@ -104,6 +106,7 @@ const StudentForm = ({ onStudentAdded, selectedInstitutionId }: StudentFormProps
       const student = await addStudent({
         nom: nom.trim().toUpperCase(),
         prenom: prenom.trim(),
+        matricule: matricule.trim() || undefined,
         photo,
         faculte: faculte.trim(),
         promotion: promotion.trim(),
@@ -229,6 +232,16 @@ const StudentForm = ({ onStudentAdded, selectedInstitutionId }: StudentFormProps
               Informations académiques
             </h4>
             <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="matricule">Matricule <span className="text-muted-foreground text-xs">(Modèle 3)</span></Label>
+                <Input
+                  id="matricule"
+                  value={matricule}
+                  onChange={(e) => setMatricule(e.target.value)}
+                  placeholder="Ex: 2025/KMG/001"
+                  className="input-institutional"
+                />
+              </div>
               <div className="space-y-2">
                 <Label htmlFor="faculte">Faculté / Option</Label>
                 <Input
