@@ -101,7 +101,7 @@ const StudentForm = ({ onStudentAdded, selectedInstitutionId }: StudentFormProps
     setIsSubmitting(true);
 
     try {
-      const student = addStudent({
+      const student = await addStudent({
         nom: nom.trim().toUpperCase(),
         prenom: prenom.trim(),
         photo,
@@ -117,7 +117,11 @@ const StudentForm = ({ onStudentAdded, selectedInstitutionId }: StudentFormProps
       onStudentAdded(student);
       resetForm();
     } catch (error) {
-      toast.error("Erreur lors de l'enregistrement");
+      if (error instanceof Error && error.message.includes("QUOTA_EXCEEDED")) {
+        toast.error("Espace de stockage plein ! Supprimez des étudiants existants pour continuer.");
+      } else {
+        toast.error("Erreur lors de l'enregistrement");
+      }
       console.error(error);
     } finally {
       setIsSubmitting(false);
