@@ -890,10 +890,25 @@ const renderPremiumRecto = async (
   doc.setFont("helvetica", "bold");
   doc.text("ANNÉE", infoX + 1.5, infoY + 0.3);
 
+  // Label MATRICULE (facultatif) - côte à côte avec ANNÉE si renseigné
+  if (student.matricule) {
+    doc.setFillColor(...colors.secondary);
+    doc.roundedRect(infoX + 18, infoY - 2, 16, 3.2, 0.5, 0.5, "F");
+    doc.setTextColor(30, 41, 59);
+    doc.setFontSize(3);
+    doc.setFont("helvetica", "bold");
+    doc.text("MATRICULE", infoX + 19.5, infoY + 0.3);
+  }
+
   doc.setTextColor(255, 255, 255);
   doc.setFontSize(4.5);
   doc.setFont("helvetica", "bold");
   doc.text(student.anneeAcademique, infoX, infoY + 5);
+
+  // Valeur MATRICULE (facultatif)
+  if (student.matricule) {
+    doc.text(student.matricule, infoX + 18, infoY + 5);
+  }
 
   // QR Code à droite
   if (!qrOnVerso && qrDataUrl) {
