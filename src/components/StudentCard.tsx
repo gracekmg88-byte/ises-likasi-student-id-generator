@@ -445,19 +445,22 @@ const StudentCard = ({ student, institution, template, side = "recto" }: Student
 
       <div className="relative pt-2 px-3">
         <div className="flex items-center justify-between">
-          <div className="w-11 h-11 rounded-full overflow-hidden bg-white shadow-lg ring-2 ring-secondary/70">
+          {/* Logo gauche Premium - rempli entièrement comme le verso */}
+          <div className="w-12 h-12 rounded-full overflow-hidden bg-white shadow-lg ring-2 ring-secondary/70">
             {institution.logoGauche ? (
-              <img src={institution.logoGauche} alt="Logo" className="w-full h-full object-contain p-0.5" />
+              <img src={institution.logoGauche} alt="Logo" className="w-full h-full object-cover" />
             ) : (
               <div className="w-full h-full flex items-center justify-center text-[6px] font-bold text-primary">RDC</div>
             )}
           </div>
           
           <div className="text-center flex-1 px-2">
-            <p className="text-[5px] font-medium tracking-widest uppercase text-secondary/80">
+            {/* Premier titre PLUS GRAND que le deuxième */}
+            <p className="text-[9px] font-bold tracking-widest uppercase text-secondary">
               {institution.tutelle.split("–")[0]}
             </p>
-            <p className="text-[9px] font-bold tracking-wide text-white mt-0.5">
+            {/* Deuxième titre PLUS PETIT */}
+            <p className="text-[7px] font-semibold tracking-wide text-white mt-0.5">
               {institution.nom}
             </p>
             <div className="inline-block mt-1 bg-gradient-to-r from-secondary to-secondary/80 px-4 py-1 rounded-full shadow-lg">
@@ -465,11 +468,12 @@ const StudentCard = ({ student, institution, template, side = "recto" }: Student
             </div>
           </div>
           
-          <div className="w-11 h-11 rounded-full overflow-hidden bg-white shadow-lg ring-2 ring-secondary/70">
+          {/* Logo droite Premium - rempli entièrement comme le verso */}
+          <div className="w-12 h-12 rounded-full overflow-hidden bg-white shadow-lg ring-2 ring-secondary/70">
             {institution.logoDroite ? (
-              <img src={institution.logoDroite} alt="Logo" className="w-full h-full object-contain p-0.5" />
+              <img src={institution.logoDroite} alt="Logo" className="w-full h-full object-cover" />
             ) : institution.logoGauche ? (
-              <img src={institution.logoGauche} alt="Logo" className="w-full h-full object-contain p-0.5" />
+              <img src={institution.logoGauche} alt="Logo" className="w-full h-full object-cover" />
             ) : (
               <div className="w-full h-full flex items-center justify-center text-[5px] font-bold text-primary">LOGO</div>
             )}

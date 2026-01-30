@@ -781,39 +781,40 @@ const renderPremiumRecto = async (
   doc.setLineWidth(0.5);
   doc.rect(0.5, 0.5, width - 1, height - 1);
 
-  // Logo gauche dans cercle doré rempli
+  // Logo gauche dans cercle - agrandi pour remplir (comme le verso)
   doc.setFillColor(255, 255, 255);
-  doc.circle(9, 9, 5.5, "F");
+  doc.circle(9, 9, 6, "F");
   if (institution.logoGauche) {
     try {
-      doc.addImage(institution.logoGauche, "PNG", 4.5, 4.5, 9, 9);
+      // Logo agrandi pour remplir le cercle entièrement (rayon 6mm = diamètre 12mm)
+      doc.addImage(institution.logoGauche, "PNG", 3, 3, 12, 12);
     } catch (e) {}
   }
 
-  // Logo droite dans cercle doré rempli
+  // Logo droite dans cercle - agrandi pour remplir (comme le verso)
   doc.setFillColor(255, 255, 255);
-  doc.circle(width - 9, 9, 5.5, "F");
+  doc.circle(width - 9, 9, 6, "F");
   if (institution.logoDroite) {
     try {
-      doc.addImage(institution.logoDroite, "PNG", width - 13.5, 4.5, 9, 9);
+      doc.addImage(institution.logoDroite, "PNG", width - 15, 3, 12, 12);
     } catch (e) {}
   } else if (institution.logoGauche) {
     try {
-      doc.addImage(institution.logoGauche, "PNG", width - 13.5, 4.5, 9, 9);
+      doc.addImage(institution.logoGauche, "PNG", width - 15, 3, 12, 12);
     } catch (e) {}
   }
 
-  // Tutelle
+  // Tutelle - PREMIER TITRE PLUS GRAND
   doc.setTextColor(...colors.secondary);
-  doc.setFontSize(3);
+  doc.setFontSize(5);
   doc.setFont("helvetica", "bold");
-  doc.text(institution.tutelle.split("–")[0]?.trim() || "RÉPUBLIQUE DÉMOCRATIQUE DU CONGO", width / 2, 4, { align: "center" });
+  doc.text(institution.tutelle.split("–")[0]?.trim() || "RÉPUBLIQUE DÉMOCRATIQUE DU CONGO", width / 2, 5, { align: "center" });
 
-  // Nom institution en blanc
+  // Nom institution en blanc - DEUXIÈME TITRE PLUS PETIT
   doc.setTextColor(255, 255, 255);
-  doc.setFontSize(4.5);
+  doc.setFontSize(3.8);
   doc.setFont("helvetica", "bold");
-  doc.text(institution.nom.substring(0, 40), width / 2, 8, { align: "center" });
+  doc.text(institution.nom.substring(0, 40), width / 2, 9, { align: "center" });
 
   // Badge CARTE D'ÉTUDIANT doré
   doc.setFillColor(...colors.secondary);
