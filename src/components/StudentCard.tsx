@@ -529,6 +529,16 @@ const StudentCard = ({ student, institution, template, side = "recto" }: Student
               </div>
               <p className="font-semibold text-white/90 text-[9px] pl-0.5 mt-0.5 leading-tight">{student.anneeAcademique}</p>
             </div>
+            
+            {/* Champ Matricule facultatif - uniquement Premium */}
+            {student.matricule && (
+              <div>
+                <div className="bg-gradient-to-r from-secondary/90 to-secondary/70 rounded px-1.5 py-0.5 inline-block shadow-sm">
+                  <p className="text-[7px] font-bold text-slate-900 uppercase tracking-wide">Matricule</p>
+                </div>
+                <p className="font-semibold text-white/90 text-[9px] pl-0.5 mt-0.5 leading-tight">{student.matricule}</p>
+              </div>
+            )}
           </div>
         </div>
 
