@@ -4,8 +4,8 @@ import { v4 as uuidv4 } from "uuid";
 const USER_STORAGE_KEY = "kmg_users";
 const USER_AUTH_KEY = "kmg_user_auth";
 
-// Trial period: 1 day
-const TRIAL_DAYS = 1;
+// Essai gratuit: 3 cartes maximum
+const FREE_TRIAL_CARDS = 3;
 
 const initializeUsers = (): void => {
   const existing = localStorage.getItem(USER_STORAGE_KEY);
@@ -19,7 +19,15 @@ initializeUsers();
 export const getUsers = (): AppUser[] => {
   initializeUsers();
   const data = localStorage.getItem(USER_STORAGE_KEY);
-  return data ? JSON.parse(data) : [];
+  const users = data ? JSON.parse(data) : [];
+  
+  // Migration des anciens utilisateurs
+  return users.map((user: any) => ({
+    ...user,
+    cardsGenerated: user.cardsGenerated ?? 0,
+    cardsQuota: user.cardsQuota ?? 0,
+    freeTrialUsed: user.freeTrialUsed ?? 0,
+  }));
 };
 
 export const getUserById = (id: string): AppUser | undefined => {
@@ -41,9 +49,6 @@ export const registerUser = (userData: { email: string; password: string; nom: s
     throw new Error("Le mot de passe doit contenir au moins 6 caractères");
   }
   
-  const trialEnd = new Date();
-  trialEnd.setDate(trialEnd.getDate() + TRIAL_DAYS);
-  
   const newUser: AppUser = {
     id: uuidv4(),
     email: userData.email.toLowerCase(),
@@ -51,7 +56,9 @@ export const registerUser = (userData: { email: string; password: string; nom: s
     nom: userData.nom,
     isPremium: false,
     dateCreation: new Date().toISOString(),
-    trialEndDate: trialEnd.toISOString(),
+    cardsGenerated: 0,
+    cardsQuota: 0,
+    freeTrialUsed: 0,
   };
   
   users.push(newUser);
@@ -79,21 +86,72 @@ export const deleteUser = (id: string): boolean => {
   return true;
 };
 
-export const setUserPremium = (userId: string, isPremium: boolean): AppUser | undefined => {
+// Activer le premium avec un quota de cartes
+export const setUserPremium = (userId: string, cardsQuota: number): AppUser | undefined => {
+  const user = getUserById(userId);
+  if (!user) return undefined;
+  
   return updateUser(userId, { 
-    isPremium, 
-    dateActivation: isPremium ? new Date().toISOString() : undefined 
+    isPremium: cardsQuota > 0, 
+    cardsQuota: user.cardsQuota + cardsQuota,
+    dateActivation: cardsQuota > 0 ? new Date().toISOString() : user.dateActivation 
   });
 };
 
-export const isTrialActive = (user: AppUser): boolean => {
-  if (user.isPremium) return true;
-  const trialEnd = new Date(user.trialEndDate);
-  return new Date() <= trialEnd;
+// Révoquer le premium
+export const revokePremium = (userId: string): AppUser | undefined => {
+  return updateUser(userId, { 
+    isPremium: false,
+    cardsQuota: 0,
+    cardsGenerated: 0
+  });
 };
 
+// Vérifier si l'utilisateur peut générer une carte
+export const canGenerateCard = (user: AppUser): boolean => {
+  if (user.isPremium) {
+    // Premium: vérifier le quota
+    return user.cardsGenerated < user.cardsQuota;
+  } else {
+    // Essai gratuit: max 3 cartes
+    return user.freeTrialUsed < FREE_TRIAL_CARDS;
+  }
+};
+
+// Obtenir le nombre de cartes restantes
+export const getRemainingCards = (user: AppUser): number => {
+  if (user.isPremium) {
+    return Math.max(0, user.cardsQuota - user.cardsGenerated);
+  } else {
+    return Math.max(0, FREE_TRIAL_CARDS - user.freeTrialUsed);
+  }
+};
+
+// Décrémenter le quota après génération
+export const decrementCardQuota = (userId: string): AppUser | undefined => {
+  const user = getUserById(userId);
+  if (!user) return undefined;
+  
+  if (user.isPremium) {
+    return updateUser(userId, { 
+      cardsGenerated: user.cardsGenerated + 1 
+    });
+  } else {
+    return updateUser(userId, { 
+      freeTrialUsed: user.freeTrialUsed + 1 
+    });
+  }
+};
+
+// Vérifier si l'essai gratuit est terminé
+export const isFreeTrialExpired = (user: AppUser): boolean => {
+  if (user.isPremium) return false;
+  return user.freeTrialUsed >= FREE_TRIAL_CARDS;
+};
+
+// Vérifier si l'utilisateur est actif (peut utiliser l'app)
 export const isUserActive = (user: AppUser): boolean => {
-  return user.isPremium || isTrialActive(user);
+  return user.isPremium || !isFreeTrialExpired(user);
 };
 
 export const loginUser = (email: string, password: string): AppUser | null => {
@@ -144,11 +202,4 @@ export const getCurrentUser = (): AppUser | undefined => {
   return undefined;
 };
 
-export const getRemainingTrialDays = (user: AppUser): number => {
-  if (user.isPremium) return -1;
-  const trialEnd = new Date(user.trialEndDate);
-  const now = new Date();
-  const diffTime = trialEnd.getTime() - now.getTime();
-  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-  return Math.max(0, diffDays);
-};
+export const getFreeTrialLimit = (): number => FREE_TRIAL_CARDS;
