@@ -618,137 +618,144 @@ const renderPremiumRecto = async (
     } catch (e) {}
   }
 
-  // Texte en-tête
-  doc.setTextColor(...colors.secondary);
-  doc.setFontSize(2.5);
-  doc.setFont("helvetica", "normal");
-  doc.text(institution.tutelle.split("–")[0]?.trim() || "", width / 2, 4, { align: "center" });
-
-  doc.setTextColor(255, 255, 255);
-  doc.setFontSize(3.5);
+  // Texte en-tête - République
+  doc.setTextColor(...colors.primary);
+  doc.setFontSize(3);
   doc.setFont("helvetica", "bold");
-  doc.text(institution.nom.substring(0, 45), width / 2, 7, { align: "center" });
+  doc.text("RÉPUBLIQUE DÉMOCRATIQUE DU CONGO", width / 2, 4, { align: "center" });
 
-  // Badge premium
+  // Sous-titre tutelle
   doc.setFillColor(...colors.secondary);
-  doc.roundedRect(width / 2 - 14, 9, 28, 4, 1.5, 1.5, "F");
+  doc.roundedRect(width / 2 - 28, 5, 56, 3.5, 0.5, 0.5, "F");
+  doc.setTextColor(...colors.primary);
+  doc.setFontSize(2.5);
+  doc.setFont("helvetica", "bold");
+  doc.text("ENSEIGNEMENT SUPÉRIEUR ET UNIVERSITAIRE", width / 2, 7.2, { align: "center" });
+
+  // Badge CARTE D'ÉTUDIANT
+  doc.setFillColor(...colors.primary);
+  doc.roundedRect(width / 2 - 16, 9.5, 32, 4, 1, 1, "F");
+  doc.setTextColor(255, 255, 255);
+  doc.setFontSize(4);
+  doc.setFont("helvetica", "bold");
+  doc.text("CARTE D'ÉTUDIANT", width / 2, 12.2, { align: "center" });
+
+  // Nom de l'institution
   doc.setTextColor(...colors.primary);
   doc.setFontSize(4.5);
   doc.setFont("helvetica", "bold");
-  doc.text("CARTE D'ÉTUDIANT", width / 2, 11.8, { align: "center" });
+  doc.text(institution.nom.substring(0, 40), width / 2, 17, { align: "center" });
 
-  // Photo avec cadre doré
+  // Photo avec cadre
   if (student.photo) {
     try {
-      doc.setFillColor(...colors.secondary);
-      doc.roundedRect(3.5, 15.5, 19, 23, 1, 1, "F");
-      doc.addImage(student.photo, "JPEG", 4, 16, 18, 22);
+      doc.setDrawColor(...colors.primary);
+      doc.setLineWidth(0.5);
+      doc.rect(4, 19, 18, 22);
+      doc.addImage(student.photo, "JPEG", 4.5, 19.5, 17, 21);
     } catch (e) {}
   }
 
-  // Informations avec bandes jaunes pour les titres
-  const infoX = 26;
-  let infoY = 17;
+  // Informations avec bandes jaunes - disposition comme l'image de référence
+  const infoX = 25;
+  let infoY = 20;
 
-  // Bande NOMS
+  // Label NOMS (petit label jaune)
   doc.setFillColor(...colors.secondary);
-  doc.roundedRect(infoX, infoY - 2, 12, 3.5, 0.5, 0.5, "F");
+  doc.roundedRect(infoX, infoY - 1.5, 8, 2.5, 0.3, 0.3, "F");
   doc.setTextColor(...colors.primary);
-  doc.setFontSize(3);
+  doc.setFontSize(2.2);
   doc.setFont("helvetica", "bold");
-  doc.text("NOMS", infoX + 1, infoY);
+  doc.text("Noms", infoX + 0.8, infoY);
 
-  doc.setTextColor(255, 255, 255);
-  doc.setFontSize(5.5);
+  // Valeur NOMS (grande et en gras)
+  doc.setTextColor(...colors.primary);
+  doc.setFontSize(5);
   doc.setFont("helvetica", "bold");
-  infoY += 3.5;
-  doc.text(student.nom, infoX, infoY);
+  doc.text(`${student.nom} ${student.prenom}`, infoX, infoY + 4);
 
+  infoY += 8;
+
+  // Label FACULTÉ (petit label jaune)
+  doc.setFillColor(...colors.secondary);
+  doc.roundedRect(infoX, infoY - 1.5, 10, 2.5, 0.3, 0.3, "F");
+  doc.setTextColor(...colors.primary);
+  doc.setFontSize(2.2);
+  doc.setFont("helvetica", "bold");
+  doc.text("Faculté", infoX + 0.8, infoY);
+
+  // Valeur FACULTÉ
+  doc.setTextColor(...colors.primary);
   doc.setFontSize(4);
-  doc.setFont("helvetica", "normal");
-  infoY += 3;
-  doc.text(student.prenom, infoX, infoY);
-
-  infoY += 4;
-  // Bande FACULTÉ
-  doc.setFillColor(...colors.secondary);
-  doc.roundedRect(infoX, infoY - 2, 14, 3.5, 0.5, 0.5, "F");
-  doc.setTextColor(...colors.primary);
-  doc.setFontSize(3);
-  doc.setFont("helvetica", "bold");
-  doc.text("FACULTÉ", infoX + 1, infoY);
-
-  // Bande PROMOTION
-  doc.setFillColor(...colors.secondary);
-  doc.roundedRect(infoX + 22, infoY - 2, 18, 3.5, 0.5, 0.5, "F");
-  doc.setTextColor(...colors.primary);
-  doc.setFontSize(3);
-  doc.setFont("helvetica", "bold");
-  doc.text("PROMOTION", infoX + 23, infoY);
-
-  // Valeurs Faculté et Promotion
-  doc.setTextColor(...colors.accent);
-  doc.setFontSize(3.5);
   doc.setFont("helvetica", "bold");
   doc.text(student.faculte, infoX, infoY + 4);
-  doc.text(student.promotion, infoX + 22, infoY + 4);
 
-  infoY += 9;
-  // Bande ANNÉE
+  infoY += 8;
+
+  // Labels PROMOTION et ANNÉE côte à côte
   doc.setFillColor(...colors.secondary);
-  doc.roundedRect(infoX, infoY - 2, 12, 3.5, 0.5, 0.5, "F");
+  doc.roundedRect(infoX, infoY - 1.5, 14, 2.5, 0.3, 0.3, "F");
   doc.setTextColor(...colors.primary);
-  doc.setFontSize(3);
+  doc.setFontSize(2.2);
   doc.setFont("helvetica", "bold");
-  doc.text("ANNÉE", infoX + 1, infoY);
+  doc.text("Promotion", infoX + 0.8, infoY);
 
-  doc.setTextColor(...colors.accent);
-  doc.setFontSize(3.5);
+  doc.setFillColor(...colors.secondary);
+  doc.roundedRect(infoX + 20, infoY - 1.5, 10, 2.5, 0.3, 0.3, "F");
+  doc.setTextColor(...colors.primary);
+  doc.setFontSize(2.2);
   doc.setFont("helvetica", "bold");
-  doc.text(student.anneeAcademique, infoX, infoY + 4);
+  doc.text("Année", infoX + 20.8, infoY);
 
-  // QR Code avec bordure dorée
+  // Valeurs PROMOTION et ANNÉE
+  doc.setTextColor(...colors.primary);
+  doc.setFontSize(4);
+  doc.setFont("helvetica", "bold");
+  doc.text(student.promotion, infoX, infoY + 4);
+  doc.text(student.anneeAcademique, infoX + 20, infoY + 4);
+
+  // QR Code à droite
   if (!qrOnVerso && qrDataUrl) {
     try {
-      doc.setFillColor(...colors.secondary);
-      doc.roundedRect(width - 17.5, 17.5, 13, 13, 1, 1, "F");
-      doc.addImage(qrDataUrl, "PNG", width - 17, 18, 12, 12);
+      doc.setDrawColor(...colors.primary);
+      doc.setLineWidth(0.3);
+      doc.rect(width - 18, 19, 14, 14);
+      doc.addImage(qrDataUrl, "PNG", width - 17.5, 19.5, 13, 13);
     } catch (e) {}
   }
-
-  // Hologramme simulé
-  doc.setFillColor(colors.secondary[0], colors.secondary[1], colors.secondary[2]);
-  doc.circle(width - 11, 34, 2, "F");
 
   // Footer
   doc.setFillColor(colors.primary[0], colors.primary[1], colors.primary[2]);
-  doc.rect(0, height - 8, width, 8, "F");
+  doc.rect(0, height - 7, width, 7, "F");
 
-  // Bande RECTEUR
-  doc.setFillColor(...colors.secondary);
-  doc.roundedRect(4, height - 7, 14, 3, 0.5, 0.5, "F");
-  doc.setTextColor(...colors.primary);
-  doc.setFontSize(2.5);
-  doc.setFont("helvetica", "bold");
-  doc.text("RECTEUR", 5, height - 5);
-
-  doc.setTextColor(...colors.secondary);
-  doc.setFontSize(2.5);
+  // Signature à gauche
+  doc.setTextColor(255, 255, 255);
+  doc.setFontSize(2);
   doc.setFont("helvetica", "normal");
-  doc.text(institution.mentionSignature, 5, height - 1.5);
-
-  // Bande EXPIRE LE
-  doc.setFillColor(...colors.secondary);
-  doc.roundedRect(width - 25, height - 7, 16, 3, 0.5, 0.5, "F");
-  doc.setTextColor(...colors.primary);
+  doc.text("Chef de l'établissement", 4, height - 4.5);
   doc.setFontSize(2.5);
   doc.setFont("helvetica", "bold");
-  doc.text("EXPIRE LE", width - 24, height - 5);
+  doc.text(institution.mentionSignature, 4, height - 2);
 
-  doc.setTextColor(...colors.secondary);
-  doc.setFontSize(4.5);
+  // DATE EXPIRATION à droite
+  doc.setFillColor(...colors.secondary);
+  doc.roundedRect(width - 28, height - 6, 8, 2.5, 0.3, 0.3, "F");
+  doc.setTextColor(...colors.primary);
+  doc.setFontSize(2);
   doc.setFont("helvetica", "bold");
-  doc.text(student.dateExpiration, width - 20, height - 1.5);
+  doc.text("DATE", width - 27.5, height - 4.2);
+
+  doc.setFillColor(...colors.secondary);
+  doc.roundedRect(width - 19, height - 6, 15, 2.5, 0.3, 0.3, "F");
+  doc.setTextColor(...colors.primary);
+  doc.setFontSize(2);
+  doc.setFont("helvetica", "bold");
+  doc.text("EXPIRATION", width - 18.5, height - 4.2);
+
+  doc.setTextColor(255, 255, 255);
+  doc.setFontSize(4);
+  doc.setFont("helvetica", "bold");
+  doc.text(student.dateExpiration, width - 20, height - 1);
 
   // Bande dorée inférieure
   doc.setFillColor(...colors.secondary);
