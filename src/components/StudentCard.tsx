@@ -146,7 +146,7 @@ const StudentCard = ({ student, institution, template, side = "recto" }: Student
       <div className="bg-gradient-to-r from-primary to-primary/90 text-primary-foreground py-1.5 px-3">
         <div className="flex items-center justify-between">
           {/* Logo gauche - agrandi pour remplir le cercle (comme le verso) */}
-          <div className="w-11 h-11 rounded-full overflow-hidden bg-white flex items-center justify-center">
+          <div className="w-12 h-12 rounded-full overflow-hidden bg-white flex items-center justify-center">
             {institution.logoGauche ? (
               <img src={institution.logoGauche} alt="Logo" className="w-full h-full object-cover" />
             ) : (
@@ -155,7 +155,7 @@ const StudentCard = ({ student, institution, template, side = "recto" }: Student
           </div>
           
           <div className="text-center flex-1 px-2">
-            <p className="text-[8px] font-bold tracking-wider uppercase leading-tight">
+            <p className="text-[9px] font-bold tracking-wider uppercase leading-tight">
               {institution.tutelle.split("–")[0]}
             </p>
             <p className="text-[6px] font-semibold text-[#f5c538]">
@@ -167,7 +167,7 @@ const StudentCard = ({ student, institution, template, side = "recto" }: Student
           </div>
           
           {/* Logo droite - agrandi pour remplir le cercle (comme le verso) */}
-          <div className="w-11 h-11 rounded-full overflow-hidden bg-white border-2 border-secondary">
+          <div className="w-12 h-12 rounded-full overflow-hidden bg-white border-2 border-secondary">
             {institution.logoDroite ? (
               <img src={institution.logoDroite} alt="Logo" className="w-full h-full object-cover" />
             ) : institution.logoGauche ? (
