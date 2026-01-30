@@ -15,8 +15,8 @@ export const generateStudentCardPDF = async (
 
   const width = 85.6;
   const height = 54;
+  const qrOnVerso = student.qrPosition === "verso";
 
-  // Couleurs selon template
   const getColors = () => {
     switch (template.style) {
       case "modern":
@@ -33,6 +33,13 @@ export const generateStudentCardPDF = async (
           accent: [59, 130, 246] as [number, number, number],
           bg: [240, 245, 255] as [number, number, number],
         };
+      case "premium":
+        return {
+          primary: [15, 23, 42] as [number, number, number],
+          secondary: [234, 179, 8] as [number, number, number],
+          accent: [148, 163, 184] as [number, number, number],
+          bg: [30, 41, 59] as [number, number, number],
+        };
       default:
         return {
           primary: [26, 54, 93] as [number, number, number],
@@ -45,47 +52,169 @@ export const generateStudentCardPDF = async (
 
   const colors = getColors();
 
-  // Fond
+  // Generate QR Code
+  let qrDataUrl: string = "";
+  try {
+    if (student.customQrCode) {
+      qrDataUrl = student.customQrCode;
+    } else {
+      const verificationUrl = `${window.location.origin}/verification/${student.qrCodeData}`;
+      qrDataUrl = await QRCode.toDataURL(verificationUrl, {
+        width: 200,
+        margin: 1,
+        color: { dark: "#1a365d", light: "#ffffff" },
+      });
+    }
+  } catch (e) {
+    console.error("Erreur QR Code:", e);
+  }
+
+  // ===== PAGE 1: RECTO =====
   doc.setFillColor(...colors.bg);
   doc.rect(0, 0, width, height, "F");
 
-  // Rendu selon template
   switch (template.style) {
     case "modern":
-      await renderModernPDF(doc, student, institution, colors, width, height);
+      await renderModernRecto(doc, student, institution, colors, width, height, qrDataUrl, qrOnVerso);
       break;
     case "advanced":
-      await renderAdvancedPDF(doc, student, institution, colors, width, height);
+      await renderAdvancedRecto(doc, student, institution, colors, width, height, qrDataUrl, qrOnVerso);
+      break;
+    case "premium":
+      await renderPremiumRecto(doc, student, institution, colors, width, height, qrDataUrl, qrOnVerso);
       break;
     default:
-      await renderClassicPDF(doc, student, institution, colors, width, height);
+      await renderClassicRecto(doc, student, institution, colors, width, height, qrDataUrl, qrOnVerso);
   }
+
+  // ===== PAGE 2: VERSO =====
+  doc.addPage([85.6, 54], "landscape");
+  doc.setFillColor(...colors.bg);
+  doc.rect(0, 0, width, height, "F");
+  await renderVerso(doc, student, institution, colors, width, height, qrDataUrl, qrOnVerso);
 
   const fileName = `carte_${template.style}_${student.nom}_${student.prenom}.pdf`;
   doc.save(fileName);
 };
 
-// Template Classique PDF
-const renderClassicPDF = async (
+// ===== VERSO COMMUN =====
+const renderVerso = async (
   doc: jsPDF,
   student: Student,
   institution: Institution,
   colors: { primary: [number, number, number]; secondary: [number, number, number]; accent: [number, number, number]; bg: [number, number, number] },
   width: number,
-  height: number
+  height: number,
+  qrDataUrl: string,
+  qrOnVerso: boolean
+) => {
+  // En-tête
+  doc.setFillColor(...colors.primary);
+  doc.rect(0, 0, width, 8, "F");
+
+  // Logos
+  if (institution.logoGauche) {
+    try {
+      doc.addImage(institution.logoGauche, "PNG", 2, 1, 6, 6);
+    } catch (e) {}
+  }
+  if (institution.logoDroite) {
+    try {
+      doc.addImage(institution.logoDroite, "PNG", width - 8, 1, 6, 6);
+    } catch (e) {}
+  } else if (institution.logoGauche) {
+    try {
+      doc.addImage(institution.logoGauche, "PNG", width - 8, 1, 6, 6);
+    } catch (e) {}
+  }
+
+  doc.setTextColor(255, 255, 255);
+  doc.setFontSize(4);
+  doc.setFont("helvetica", "bold");
+  doc.text("CARTE D'ÉTUDIANT", width / 2, 4, { align: "center" });
+  doc.setFontSize(2.5);
+  doc.setTextColor(...colors.secondary);
+  doc.text(institution.nom.substring(0, 50), width / 2, 6.5, { align: "center" });
+
+  // QR Code au verso si configuré
+  if (qrOnVerso && qrDataUrl) {
+    try {
+      doc.addImage(qrDataUrl, "PNG", width / 2 - 8, 10, 16, 16);
+    } catch (e) {}
+  }
+
+  // Texte officiel
+  const grayLight: [number, number, number] = [107, 114, 128];
+  doc.setTextColor(...grayLight);
+  doc.setFontSize(2.2);
+  doc.setFont("helvetica", "normal");
+  
+  const texteVerso = institution.texteVerso || 
+    "Cette carte est strictement personnelle et non transférable. Elle est valide uniquement pour l'année académique en cours. En cas de perte, prière de la retourner à l'établissement émetteur.";
+  
+  const textY = qrOnVerso ? 29 : 12;
+  const lines = doc.splitTextToSize(texteVerso, width - 10);
+  doc.text(lines, width / 2, textY, { align: "center" });
+
+  // Zone signature et cachet
+  const signatureY = height - 18;
+  
+  // Cachet
+  doc.setDrawColor(156, 163, 175);
+  doc.setLineWidth(0.2);
+  doc.roundedRect(8, signatureY, 18, 12, 1, 1);
+  if (institution.cachetImage) {
+    try {
+      doc.addImage(institution.cachetImage, "PNG", 9, signatureY + 1, 16, 10);
+    } catch (e) {}
+  } else {
+    doc.setTextColor(...grayLight);
+    doc.setFontSize(2);
+    doc.text("Cachet", 17, signatureY + 7, { align: "center" });
+  }
+
+  // Signature
+  doc.roundedRect(width - 30, signatureY, 22, 12, 1, 1);
+  if (institution.signatureImage) {
+    try {
+      doc.addImage(institution.signatureImage, "PNG", width - 29, signatureY + 1, 20, 8);
+    } catch (e) {}
+  }
+  doc.setTextColor(...colors.primary);
+  doc.setFontSize(2.5);
+  doc.setFont("helvetica", "bold");
+  doc.text(institution.mentionSignature, width - 19, signatureY + 11, { align: "center" });
+
+  // Pied de page
+  doc.setFillColor(240, 244, 248);
+  doc.rect(0, height - 4, width, 4, "F");
+  doc.setTextColor(...grayLight);
+  doc.setFontSize(2);
+  doc.setFont("helvetica", "normal");
+  doc.text("Vérifiez l'authenticité : scannez le QR Code ou visitez notre portail de vérification", width / 2, height - 1.5, { align: "center" });
+};
+
+// ===== RECTO CLASSIQUE =====
+const renderClassicRecto = async (
+  doc: jsPDF,
+  student: Student,
+  institution: Institution,
+  colors: { primary: [number, number, number]; secondary: [number, number, number]; accent: [number, number, number]; bg: [number, number, number] },
+  width: number,
+  height: number,
+  qrDataUrl: string,
+  qrOnVerso: boolean
 ) => {
   // En-tête bleu
   doc.setFillColor(...colors.primary);
   doc.rect(0, 0, width, 11, "F");
 
-  // Logo gauche
+  // Logos
   if (institution.logoGauche) {
     try {
       doc.addImage(institution.logoGauche, "PNG", 2, 1, 9, 9);
     } catch (e) {}
   }
-
-  // Logo droite
   if (institution.logoDroite) {
     try {
       doc.addImage(institution.logoDroite, "PNG", width - 11, 1, 9, 9);
@@ -173,21 +302,12 @@ const renderClassicPDF = async (
   doc.text(student.promotion, infoX, infoY);
   doc.text(student.anneeAcademique, infoX + 20, infoY);
 
-  // QR Code
-  try {
-    let qrDataUrl: string;
-    if (student.customQrCode) {
-      qrDataUrl = student.customQrCode;
-    } else {
-      const verificationUrl = `${window.location.origin}/verification/${student.qrCodeData}`;
-      qrDataUrl = await QRCode.toDataURL(verificationUrl, {
-        width: 200,
-        margin: 1,
-        color: { dark: "#1a365d", light: "#ffffff" },
-      });
-    }
-    doc.addImage(qrDataUrl, "PNG", width - 18, 18, 14, 14);
-  } catch (e) {}
+  // QR Code (si pas au verso)
+  if (!qrOnVerso && qrDataUrl) {
+    try {
+      doc.addImage(qrDataUrl, "PNG", width - 18, 18, 14, 14);
+    } catch (e) {}
+  }
 
   // Footer
   doc.setFillColor(248, 250, 252);
@@ -200,11 +320,6 @@ const renderClassicPDF = async (
   doc.setFontSize(2.5);
   doc.setFont("helvetica", "normal");
   doc.text(institution.mentionSignature, 6, height - 6);
-  doc.setDrawColor(156, 163, 175);
-  doc.line(4, height - 3, 25, height - 3);
-  doc.setFontSize(2);
-  doc.setFont("helvetica", "italic");
-  doc.text("Signature", 6, height - 1.5);
 
   doc.setTextColor(...grayLight);
   doc.setFontSize(2.5);
@@ -215,16 +330,17 @@ const renderClassicPDF = async (
   doc.text(student.dateExpiration, width - 22, height - 2.5);
 };
 
-// Template Moderne PDF
-const renderModernPDF = async (
+// ===== RECTO MODERNE =====
+const renderModernRecto = async (
   doc: jsPDF,
   student: Student,
   institution: Institution,
   colors: { primary: [number, number, number]; secondary: [number, number, number]; accent: [number, number, number]; bg: [number, number, number] },
   width: number,
-  height: number
+  height: number,
+  qrDataUrl: string,
+  qrOnVerso: boolean
 ) => {
-  // Fond dégradé simulé
   doc.setFillColor(248, 250, 252);
   doc.rect(0, 0, width, height, "F");
 
@@ -232,7 +348,6 @@ const renderModernPDF = async (
   doc.setFillColor(...colors.primary);
   doc.rect(0, 0, width, 9, "F");
 
-  // Logo
   const logo = institution.logoGauche || institution.logoDroite;
   if (logo) {
     try {
@@ -310,20 +425,11 @@ const renderModernPDF = async (
   doc.text(student.anneeAcademique, infoX + 12, infoY);
 
   // QR
-  try {
-    let qrDataUrl: string;
-    if (student.customQrCode) {
-      qrDataUrl = student.customQrCode;
-    } else {
-      const verificationUrl = `${window.location.origin}/verification/${student.qrCodeData}`;
-      qrDataUrl = await QRCode.toDataURL(verificationUrl, {
-        width: 200,
-        margin: 1,
-        color: { dark: "#334155", light: "#ffffff" },
-      });
-    }
-    doc.addImage(qrDataUrl, "PNG", width - 17, 18, 12, 12);
-  } catch (e) {}
+  if (!qrOnVerso && qrDataUrl) {
+    try {
+      doc.addImage(qrDataUrl, "PNG", width - 17, 18, 12, 12);
+    } catch (e) {}
+  }
 
   // Footer
   doc.setFillColor(255, 255, 255);
@@ -340,22 +446,19 @@ const renderModernPDF = async (
   doc.text(`Exp: ${student.dateExpiration}`, width - 5, height - 2.5, { align: "right" });
 };
 
-// Template Avancé PDF
-const renderAdvancedPDF = async (
+// ===== RECTO AVANCÉ =====
+const renderAdvancedRecto = async (
   doc: jsPDF,
   student: Student,
   institution: Institution,
   colors: { primary: [number, number, number]; secondary: [number, number, number]; accent: [number, number, number]; bg: [number, number, number] },
   width: number,
-  height: number
+  height: number,
+  qrDataUrl: string,
+  qrOnVerso: boolean
 ) => {
-  // Fond avec effet
   doc.setFillColor(...colors.bg);
   doc.rect(0, 0, width, height, "F");
-
-  // Décoration
-  doc.setFillColor(colors.secondary[0], colors.secondary[1], colors.secondary[2]);
-  doc.circle(width + 5, -5, 20, "F");
 
   // En-tête dégradé
   doc.setFillColor(...colors.primary);
@@ -377,7 +480,6 @@ const renderAdvancedPDF = async (
     } catch (e) {}
   }
 
-  // Texte en-tête
   doc.setTextColor(255, 255, 255);
   doc.setFontSize(3);
   doc.setFont("helvetica", "bold");
@@ -445,22 +547,13 @@ const renderAdvancedPDF = async (
   doc.text(student.anneeAcademique, infoX + 18, infoY + 3);
 
   // QR avec effet
-  try {
-    let qrDataUrl: string;
-    if (student.customQrCode) {
-      qrDataUrl = student.customQrCode;
-    } else {
-      const verificationUrl = `${window.location.origin}/verification/${student.qrCodeData}`;
-      qrDataUrl = await QRCode.toDataURL(verificationUrl, {
-        width: 200,
-        margin: 1,
-        color: { dark: "#1a365d", light: "#ffffff" },
-      });
-    }
-    doc.setFillColor(...colors.secondary);
-    doc.roundedRect(width - 17.5, 17.5, 13, 13, 1, 1, "F");
-    doc.addImage(qrDataUrl, "PNG", width - 17, 18, 12, 12);
-  } catch (e) {}
+  if (!qrOnVerso && qrDataUrl) {
+    try {
+      doc.setFillColor(...colors.secondary);
+      doc.roundedRect(width - 17.5, 17.5, 13, 13, 1, 1, "F");
+      doc.addImage(qrDataUrl, "PNG", width - 17, 18, 12, 12);
+    } catch (e) {}
+  }
 
   // Footer
   doc.setFillColor(240, 245, 255);
@@ -469,11 +562,6 @@ const renderAdvancedPDF = async (
   doc.setTextColor(...grayLight);
   doc.setFontSize(2.5);
   doc.text(institution.mentionSignature, 5, height - 5);
-  doc.setDrawColor(...colors.primary);
-  doc.line(4, height - 2.5, 22, height - 2.5);
-  doc.setFontSize(2);
-  doc.setFont("helvetica", "italic");
-  doc.text("Signature", 5, height - 1);
 
   doc.setTextColor(...grayLight);
   doc.setFontSize(2.5);
@@ -485,23 +573,151 @@ const renderAdvancedPDF = async (
   doc.text(student.dateExpiration, width - 20, height - 1.5);
 };
 
-export const getImageBase64 = async (imageSrc: string): Promise<string> => {
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    img.crossOrigin = "anonymous";
-    img.onload = () => {
-      const canvas = document.createElement("canvas");
-      canvas.width = img.width;
-      canvas.height = img.height;
-      const ctx = canvas.getContext("2d");
-      if (ctx) {
-        ctx.drawImage(img, 0, 0);
-        resolve(canvas.toDataURL("image/jpeg"));
-      } else {
-        reject(new Error("Could not get canvas context"));
-      }
-    };
-    img.onerror = reject;
-    img.src = imageSrc;
-  });
+// ===== RECTO PREMIUM =====
+const renderPremiumRecto = async (
+  doc: jsPDF,
+  student: Student,
+  institution: Institution,
+  colors: { primary: [number, number, number]; secondary: [number, number, number]; accent: [number, number, number]; bg: [number, number, number] },
+  width: number,
+  height: number,
+  qrDataUrl: string,
+  qrOnVerso: boolean
+) => {
+  // Fond sombre premium
+  doc.setFillColor(...colors.bg);
+  doc.rect(0, 0, width, height, "F");
+
+  // Bande dorée supérieure
+  doc.setFillColor(...colors.secondary);
+  doc.rect(0, 0, width, 1, "F");
+
+  // En-tête
+  doc.setFillColor(...colors.primary);
+  doc.rect(0, 1, width, 12, "F");
+
+  // Logos avec bordure dorée
+  if (institution.logoGauche) {
+    try {
+      doc.setFillColor(...colors.secondary);
+      doc.circle(7, 7.5, 5.5, "F");
+      doc.addImage(institution.logoGauche, "PNG", 2.5, 3, 9, 9);
+    } catch (e) {}
+  }
+  if (institution.logoDroite) {
+    try {
+      doc.setFillColor(...colors.secondary);
+      doc.circle(width - 7, 7.5, 5.5, "F");
+      doc.addImage(institution.logoDroite, "PNG", width - 11.5, 3, 9, 9);
+    } catch (e) {}
+  } else if (institution.logoGauche) {
+    try {
+      doc.setFillColor(...colors.secondary);
+      doc.circle(width - 7, 7.5, 5.5, "F");
+      doc.addImage(institution.logoGauche, "PNG", width - 11.5, 3, 9, 9);
+    } catch (e) {}
+  }
+
+  // Texte en-tête
+  doc.setTextColor(...colors.secondary);
+  doc.setFontSize(2.5);
+  doc.setFont("helvetica", "normal");
+  doc.text(institution.tutelle.split("–")[0]?.trim() || "", width / 2, 4, { align: "center" });
+
+  doc.setTextColor(255, 255, 255);
+  doc.setFontSize(3.5);
+  doc.setFont("helvetica", "bold");
+  doc.text(institution.nom.substring(0, 45), width / 2, 7, { align: "center" });
+
+  // Badge premium
+  doc.setFillColor(...colors.secondary);
+  doc.roundedRect(width / 2 - 14, 9, 28, 4, 1.5, 1.5, "F");
+  doc.setTextColor(...colors.primary);
+  doc.setFontSize(4.5);
+  doc.setFont("helvetica", "bold");
+  doc.text("CARTE D'ÉTUDIANT", width / 2, 11.8, { align: "center" });
+
+  // Photo avec cadre doré
+  if (student.photo) {
+    try {
+      doc.setFillColor(...colors.secondary);
+      doc.roundedRect(3.5, 15.5, 19, 23, 1, 1, "F");
+      doc.addImage(student.photo, "JPEG", 4, 16, 18, 22);
+    } catch (e) {}
+  }
+
+  // Informations
+  const infoX = 26;
+  let infoY = 17;
+
+  doc.setTextColor(...colors.secondary);
+  doc.setFontSize(2.5);
+  doc.setFont("helvetica", "normal");
+  doc.text("NOMS", infoX, infoY);
+
+  doc.setTextColor(255, 255, 255);
+  doc.setFontSize(5.5);
+  doc.setFont("helvetica", "bold");
+  infoY += 3.5;
+  doc.text(student.nom, infoX, infoY);
+
+  doc.setFontSize(4);
+  doc.setFont("helvetica", "normal");
+  infoY += 3;
+  doc.text(student.prenom, infoX, infoY);
+
+  infoY += 5;
+  doc.setTextColor(...colors.secondary);
+  doc.setFontSize(2.5);
+  doc.text("Faculté", infoX, infoY);
+  doc.setTextColor(...colors.accent);
+  doc.setFontSize(3.5);
+  doc.setFont("helvetica", "bold");
+  doc.text(student.faculte, infoX, infoY + 3);
+
+  infoY += 7;
+  doc.setTextColor(...colors.secondary);
+  doc.setFontSize(2.5);
+  doc.setFont("helvetica", "normal");
+  doc.text("Promotion", infoX, infoY);
+  doc.text("Année", infoX + 18, infoY);
+  doc.setTextColor(...colors.accent);
+  doc.setFontSize(3.5);
+  doc.setFont("helvetica", "bold");
+  doc.text(student.promotion, infoX, infoY + 3);
+  doc.text(student.anneeAcademique, infoX + 18, infoY + 3);
+
+  // QR Code avec bordure dorée
+  if (!qrOnVerso && qrDataUrl) {
+    try {
+      doc.setFillColor(...colors.secondary);
+      doc.roundedRect(width - 17.5, 17.5, 13, 13, 1, 1, "F");
+      doc.addImage(qrDataUrl, "PNG", width - 17, 18, 12, 12);
+    } catch (e) {}
+  }
+
+  // Hologramme simulé
+  doc.setFillColor(colors.secondary[0], colors.secondary[1], colors.secondary[2]);
+  doc.circle(width - 11, 34, 2, "F");
+
+  // Footer
+  doc.setFillColor(colors.primary[0], colors.primary[1], colors.primary[2]);
+  doc.rect(0, height - 8, width, 8, "F");
+
+  doc.setTextColor(...colors.secondary);
+  doc.setFontSize(2.5);
+  doc.setFont("helvetica", "normal");
+  doc.text(institution.mentionSignature, 5, height - 4);
+
+  doc.setTextColor(...colors.accent);
+  doc.setFontSize(2.5);
+  doc.text("Expire le", width - 20, height - 5);
+  doc.setTextColor(...colors.secondary);
+  doc.setFontSize(4.5);
+  doc.setFont("helvetica", "bold");
+  doc.text(student.dateExpiration, width - 20, height - 1.5);
+
+  // Bande dorée inférieure
+  doc.setFillColor(...colors.secondary);
+  doc.rect(0, height - 0.5, width, 0.5, "F");
 };
