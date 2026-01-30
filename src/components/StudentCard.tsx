@@ -62,22 +62,24 @@ const StudentCard = ({ student, institution, template, side = "recto" }: Student
       {/* En-tête */}
       <div className="bg-gradient-to-r from-primary to-primary/90 text-primary-foreground py-2 px-3">
         <div className="flex items-center justify-between">
-          <div className="w-8 h-8 rounded-full overflow-hidden bg-white/20 flex items-center justify-center">
+          {/* Logo gauche verso - agrandi pour remplir le cercle */}
+          <div className="w-8 h-8 rounded-full overflow-hidden bg-white flex items-center justify-center">
             {institution.logoGauche ? (
-              <img src={institution.logoGauche} alt="Logo" className="w-full h-full object-contain p-0.5" />
+              <img src={institution.logoGauche} alt="Logo" className="w-full h-full object-cover" />
             ) : (
-              <div className="text-[5px] text-center font-bold">RDC</div>
+              <div className="text-[5px] text-center font-bold text-primary">RDC</div>
             )}
           </div>
           <div className="text-center flex-1 px-2">
             <p className="text-[7px] font-bold tracking-wider uppercase">CARTE D'ÉTUDIANT</p>
             <p className="text-[5px] text-secondary">{institution.nom}</p>
           </div>
+          {/* Logo droite verso - agrandi pour remplir le cercle */}
           <div className="w-8 h-8 rounded-full overflow-hidden bg-white border border-secondary">
             {institution.logoDroite ? (
-              <img src={institution.logoDroite} alt="Logo" className="w-full h-full object-contain p-0.5" />
+              <img src={institution.logoDroite} alt="Logo" className="w-full h-full object-cover" />
             ) : institution.logoGauche ? (
-              <img src={institution.logoGauche} alt="Logo" className="w-full h-full object-contain p-0.5" />
+              <img src={institution.logoGauche} alt="Logo" className="w-full h-full object-cover" />
             ) : (
               <div className="w-full h-full flex items-center justify-center text-[4px] font-bold text-primary">LOGO</div>
             )}
@@ -143,11 +145,12 @@ const StudentCard = ({ student, institution, template, side = "recto" }: Student
     <div className="relative h-full bg-gradient-to-br from-primary/5 via-card to-secondary/10 rounded-lg shadow-2xl border-4 border-primary overflow-hidden">
       <div className="bg-gradient-to-r from-primary to-primary/90 text-primary-foreground py-1.5 px-3">
         <div className="flex items-center justify-between">
-          <div className="w-10 h-10 rounded-full overflow-hidden bg-white/20 flex items-center justify-center">
+          {/* Logo gauche - agrandi pour remplir le cercle */}
+          <div className="w-10 h-10 rounded-full overflow-hidden bg-white flex items-center justify-center">
             {institution.logoGauche ? (
-              <img src={institution.logoGauche} alt="Logo" className="w-full h-full object-contain p-0.5" />
+              <img src={institution.logoGauche} alt="Logo" className="w-full h-full object-cover" />
             ) : (
-              <div className="text-[6px] text-center leading-tight font-bold">RDC</div>
+              <div className="text-[6px] text-center leading-tight font-bold text-primary">RDC</div>
             )}
           </div>
           
@@ -163,11 +166,12 @@ const StudentCard = ({ student, institution, template, side = "recto" }: Student
             </p>
           </div>
           
+          {/* Logo droite - agrandi pour remplir le cercle */}
           <div className="w-10 h-10 rounded-full overflow-hidden bg-white border-2 border-secondary">
             {institution.logoDroite ? (
-              <img src={institution.logoDroite} alt="Logo" className="w-full h-full object-contain p-0.5" />
+              <img src={institution.logoDroite} alt="Logo" className="w-full h-full object-cover" />
             ) : institution.logoGauche ? (
-              <img src={institution.logoGauche} alt="Logo" className="w-full h-full object-contain p-0.5" />
+              <img src={institution.logoGauche} alt="Logo" className="w-full h-full object-cover" />
             ) : (
               <div className="w-full h-full flex items-center justify-center text-[5px] font-bold text-primary">LOGO</div>
             )}
@@ -224,11 +228,12 @@ const StudentCard = ({ student, institution, template, side = "recto" }: Student
 
       <div className="absolute bottom-0 left-0 right-0 bg-primary/5 border-t border-primary/20 py-1.5 px-3">
         <div className="flex justify-between items-center">
+          {/* Label signature - UNIQUEMENT le label jaune, sans texte en dessous */}
           <div>
-            <span className="bg-[#f5c538] text-[#0f172a] text-[7px] px-1.5 py-0.5 rounded font-bold uppercase">{institution.mentionSignature}</span>
+            <span className="bg-[#f5c538] text-[#0f172a] text-[7px] px-2 py-0.5 rounded font-bold uppercase">{institution.mentionSignature}</span>
           </div>
           <div className="text-right">
-            <span className="bg-[#f5c538] text-[#0f172a] text-[7px] px-1.5 py-0.5 rounded font-bold uppercase">Expire le</span>
+            <span className="bg-[#f5c538] text-[#0f172a] text-[7px] px-2 py-0.5 rounded font-bold uppercase">Expire le</span>
             <p className="text-xs font-bold text-primary mt-0.5">{student.dateExpiration}</p>
           </div>
         </div>
