@@ -155,10 +155,10 @@ const StudentCard = ({ student, institution, template, side = "recto" }: Student
             <p className="text-[6px] font-bold tracking-wider uppercase leading-tight">
               {institution.tutelle.split("–")[0]}
             </p>
-            <p className="text-[5px] font-semibold text-secondary">
+            <p className="text-[6px] font-semibold text-[#f5c538]">
               {institution.tutelle.split("–")[1] || "Enseignement Supérieur"}
             </p>
-            <p className="text-[8px] font-bold tracking-wide mt-0.5 bg-secondary text-secondary-foreground px-2 py-0.5 inline-block rounded-sm">
+            <p className="text-[8px] font-bold tracking-wide mt-0.5 bg-[#f5c538] text-[#0f172a] px-2 py-0.5 inline-block rounded-sm">
               CARTE D'ÉTUDIANT
             </p>
           </div>
@@ -194,21 +194,21 @@ const StudentCard = ({ student, institution, template, side = "recto" }: Student
 
         <div className="flex-1 min-w-0 text-[10px] space-y-1.5">
           <div>
-            <span className="text-muted-foreground text-[8px] uppercase">Noms</span>
-            <p className="font-bold text-sm text-foreground truncate">{student.nom} {student.prenom}</p>
+            <span className="bg-[#f5c538] text-[#0f172a] text-[7px] px-1.5 py-0.5 rounded font-bold uppercase">Noms</span>
+            <p className="font-bold text-sm text-foreground mt-0.5">{student.nom} {student.prenom}</p>
           </div>
           <div>
-            <span className="text-muted-foreground text-[8px] uppercase">Faculté</span>
-            <p className="font-semibold text-foreground">{student.faculte}</p>
+            <span className="bg-[#f5c538] text-[#0f172a] text-[7px] px-1.5 py-0.5 rounded font-bold uppercase">Faculté</span>
+            <p className="font-semibold text-foreground text-[10px] mt-0.5 leading-tight">{student.faculte}</p>
           </div>
           <div className="flex gap-4">
             <div>
-              <span className="text-muted-foreground text-[8px] uppercase">Promotion</span>
-              <p className="font-semibold text-foreground">{student.promotion}</p>
+              <span className="bg-[#f5c538] text-[#0f172a] text-[7px] px-1.5 py-0.5 rounded font-bold uppercase">Promotion</span>
+              <p className="font-semibold text-foreground mt-0.5">{student.promotion}</p>
             </div>
             <div>
-              <span className="text-muted-foreground text-[8px] uppercase">Année</span>
-              <p className="font-semibold text-foreground">{student.anneeAcademique}</p>
+              <span className="bg-[#f5c538] text-[#0f172a] text-[7px] px-1.5 py-0.5 rounded font-bold uppercase">Année</span>
+              <p className="font-semibold text-foreground mt-0.5">{student.anneeAcademique}</p>
             </div>
           </div>
         </div>
@@ -223,13 +223,13 @@ const StudentCard = ({ student, institution, template, side = "recto" }: Student
       </div>
 
       <div className="absolute bottom-0 left-0 right-0 bg-primary/5 border-t border-primary/20 py-1.5 px-3">
-        <div className="flex justify-between items-end">
-          <div className="text-[8px]">
-            <p className="text-muted-foreground">{institution.mentionSignature}</p>
+        <div className="flex justify-between items-center">
+          <div>
+            <span className="bg-[#f5c538] text-[#0f172a] text-[7px] px-1.5 py-0.5 rounded font-bold uppercase">{institution.mentionSignature}</span>
           </div>
           <div className="text-right">
-            <p className="text-[8px] text-muted-foreground">Date d'expiration</p>
-            <p className="text-xs font-bold text-primary">{student.dateExpiration}</p>
+            <span className="bg-[#f5c538] text-[#0f172a] text-[7px] px-1.5 py-0.5 rounded font-bold uppercase">Expire le</span>
+            <p className="text-xs font-bold text-primary mt-0.5">{student.dateExpiration}</p>
           </div>
         </div>
       </div>

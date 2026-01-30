@@ -18,11 +18,14 @@ export const generateStudentCardPDF = async (
   const qrOnVerso = student.qrPosition === "verso";
 
   const getColors = () => {
+    // Jaune plus doux et élégant pour un meilleur contraste et rendu professionnel
+    const elegantYellow: [number, number, number] = [245, 197, 56];
+    
     switch (template.style) {
       case "modern":
         return {
           primary: [26, 54, 93] as [number, number, number],
-          secondary: [234, 179, 8] as [number, number, number],
+          secondary: elegantYellow,
           accent: [30, 41, 59] as [number, number, number],
           bg: [255, 255, 255] as [number, number, number],
           textDark: [15, 23, 42] as [number, number, number],
@@ -30,7 +33,7 @@ export const generateStudentCardPDF = async (
       case "advanced":
         return {
           primary: [26, 54, 93] as [number, number, number],
-          secondary: [234, 179, 8] as [number, number, number],
+          secondary: elegantYellow,
           accent: [30, 58, 138] as [number, number, number],
           bg: [255, 255, 255] as [number, number, number],
           textDark: [15, 23, 42] as [number, number, number],
@@ -38,7 +41,7 @@ export const generateStudentCardPDF = async (
       case "premium":
         return {
           primary: [26, 54, 93] as [number, number, number],
-          secondary: [234, 179, 8] as [number, number, number],
+          secondary: elegantYellow,
           accent: [71, 85, 105] as [number, number, number],
           bg: [248, 250, 252] as [number, number, number],
           textDark: [15, 23, 42] as [number, number, number],
@@ -46,7 +49,7 @@ export const generateStudentCardPDF = async (
       default:
         return {
           primary: [26, 54, 93] as [number, number, number],
-          secondary: [234, 179, 8] as [number, number, number],
+          secondary: elegantYellow,
           accent: [17, 24, 39] as [number, number, number],
           bg: [255, 255, 255] as [number, number, number],
           textDark: [15, 23, 42] as [number, number, number],
@@ -326,15 +329,16 @@ const renderClassicRecto = async (
   doc.setFont("helvetica", "bold");
   doc.text("NOMS", infoX + 1.5, infoY + 0.3);
 
-  // Valeur NOMS
+  // Valeur NOMS - nom complet sur une ligne cohérente
+  const fullName = `${student.nom.toUpperCase()} ${student.prenom}`;
   doc.setTextColor(...colors.textDark);
-  doc.setFontSize(6.5);
+  doc.setFontSize(5.5);
   doc.setFont("helvetica", "bold");
-  doc.text(student.nom.toUpperCase(), infoX, infoY + 5);
-  doc.setFontSize(5);
-  doc.text(student.prenom, infoX, infoY + 9);
+  // Gestion automatique des retours à la ligne pour les noms longs
+  const nameLines = doc.splitTextToSize(fullName, 32);
+  doc.text(nameLines, infoX, infoY + 4.5);
 
-  infoY += 13;
+  infoY += nameLines.length > 1 ? 11 : 9;
 
   // Labels FACULTÉ et PROMOTION côte à côte
   doc.setFillColor(...colors.secondary);
@@ -351,14 +355,15 @@ const renderClassicRecto = async (
   doc.setFont("helvetica", "bold");
   doc.text("PROMOTION", infoX + 23.5, infoY + 0.3);
 
-  // Valeurs
+  // Valeur FACULTÉ avec retour à la ligne automatique
   doc.setTextColor(...colors.textDark);
-  doc.setFontSize(4.5);
+  doc.setFontSize(4);
   doc.setFont("helvetica", "bold");
-  doc.text(student.faculte.substring(0, 18), infoX, infoY + 5);
-  doc.text(student.promotion, infoX + 22, infoY + 5);
+  const faculteLines = doc.splitTextToSize(student.faculte, 18);
+  doc.text(faculteLines, infoX, infoY + 4.5);
+  doc.text(student.promotion, infoX + 22, infoY + 4.5);
 
-  infoY += 9;
+  infoY += faculteLines.length > 1 ? 10 : 8;
 
   // Label ANNÉE
   doc.setFillColor(...colors.secondary);
@@ -372,7 +377,7 @@ const renderClassicRecto = async (
   doc.setTextColor(...colors.textDark);
   doc.setFontSize(4.5);
   doc.setFont("helvetica", "bold");
-  doc.text(student.anneeAcademique, infoX, infoY + 5);
+  doc.text(student.anneeAcademique, infoX, infoY + 4.5);
 
   // QR Code à droite (si pas au verso) - exactement comme l'aperçu
   if (!qrOnVerso && qrDataUrl) {
@@ -383,21 +388,16 @@ const renderClassicRecto = async (
     } catch (e) {}
   }
 
-  // Footer - Zone signature et expiration
-  const footerY = height - 10;
+  // Footer - Zone signature et expiration (SANS doublon)
+  const footerY = height - 8;
   
-  // Label RECTEUR à gauche
+  // Label signature à gauche - UNE SEULE FOIS
   doc.setFillColor(...colors.secondary);
-  doc.roundedRect(4, footerY, 14, 3.2, 0.5, 0.5, "F");
+  doc.roundedRect(4, footerY, 16, 3.2, 0.5, 0.5, "F");
   doc.setTextColor(...colors.textDark);
   doc.setFontSize(3);
   doc.setFont("helvetica", "bold");
-  doc.text(institution.mentionSignature.split(" ")[0]?.toUpperCase() || "RECTEUR", 5.5, footerY + 2);
-
-  doc.setTextColor(...colors.textDark);
-  doc.setFontSize(3.5);
-  doc.setFont("helvetica", "normal");
-  doc.text(institution.mentionSignature, 4, footerY + 6);
+  doc.text(institution.mentionSignature.toUpperCase(), 5.5, footerY + 2);
 
   // Label EXPIRE LE à droite
   doc.setFillColor(...colors.secondary);
@@ -486,13 +486,15 @@ const renderModernRecto = async (
   doc.setFont("helvetica", "bold");
   doc.text("NOMS", infoX + 1.5, infoY + 0.3);
 
-  // Valeur NOMS
+  // Valeur NOMS - nom complet cohérent
+  const fullName = `${student.nom} ${student.prenom}`;
   doc.setTextColor(...colors.textDark);
-  doc.setFontSize(6);
+  doc.setFontSize(5.5);
   doc.setFont("helvetica", "bold");
-  doc.text(`${student.nom} ${student.prenom}`.substring(0, 20), infoX, infoY + 5.5);
+  const nameLines = doc.splitTextToSize(fullName, 30);
+  doc.text(nameLines, infoX, infoY + 5);
 
-  infoY += 10;
+  infoY += nameLines.length > 1 ? 11 : 9;
 
   // Label FACULTÉ
   doc.setFillColor(...colors.secondary);
@@ -502,12 +504,14 @@ const renderModernRecto = async (
   doc.setFont("helvetica", "bold");
   doc.text("FACULTÉ", infoX + 1.5, infoY + 0.3);
 
+  // Valeur FACULTÉ avec retour à la ligne
   doc.setTextColor(...colors.textDark);
-  doc.setFontSize(4.5);
+  doc.setFontSize(4);
   doc.setFont("helvetica", "bold");
-  doc.text(student.faculte.substring(0, 25), infoX, infoY + 5);
+  const faculteLines = doc.splitTextToSize(student.faculte, 28);
+  doc.text(faculteLines, infoX, infoY + 4.5);
 
-  infoY += 9;
+  infoY += faculteLines.length > 1 ? 10 : 8;
 
   // Labels PROMOTION et ANNÉE
   doc.setFillColor(...colors.secondary);
@@ -652,12 +656,15 @@ const renderAdvancedRecto = async (
   doc.setFont("helvetica", "bold");
   doc.text("NOMS", infoX + 1.5, infoY - 0.2);
 
+  // Valeur NOMS - nom complet cohérent
+  const fullName = `${student.nom} ${student.prenom}`;
   doc.setTextColor(...colors.textDark);
-  doc.setFontSize(6);
+  doc.setFontSize(5.5);
   doc.setFont("helvetica", "bold");
-  doc.text(`${student.nom} ${student.prenom}`.substring(0, 18), infoX, infoY + 4);
+  const nameLines = doc.splitTextToSize(fullName, 28);
+  doc.text(nameLines, infoX, infoY + 4);
 
-  infoY += 8;
+  infoY += nameLines.length > 1 ? 9 : 7;
 
   // MATRICULE - uniquement pour le modèle Advanced
   if (student.matricule) {
@@ -684,12 +691,14 @@ const renderAdvancedRecto = async (
   doc.setFont("helvetica", "bold");
   doc.text("FACULTÉ", infoX + 1.5, infoY + 0.3);
 
+  // Valeur FACULTÉ avec retour à la ligne
   doc.setTextColor(...colors.textDark);
-  doc.setFontSize(4.5);
+  doc.setFontSize(4);
   doc.setFont("helvetica", "bold");
-  doc.text(student.faculte.substring(0, 22), infoX, infoY + 5);
+  const faculteLines = doc.splitTextToSize(student.faculte, 26);
+  doc.text(faculteLines, infoX, infoY + 4.5);
 
-  infoY += 7;
+  infoY += faculteLines.length > 1 ? 9 : 7;
 
   // Labels PROMOTION et ANNÉE côte à côte
   doc.setFillColor(...colors.secondary);
@@ -833,15 +842,15 @@ const renderPremiumRecto = async (
   doc.setFont("helvetica", "bold");
   doc.text("NOMS", infoX + 1.5, infoY + 0.3);
 
-  // Valeur NOMS - blanc
+  // Valeur NOMS - nom complet cohérent
+  const fullName = `${student.nom.toUpperCase()} ${student.prenom}`;
   doc.setTextColor(255, 255, 255);
-  doc.setFontSize(6.5);
+  doc.setFontSize(5.5);
   doc.setFont("helvetica", "bold");
-  doc.text(student.nom.toUpperCase(), infoX, infoY + 5);
-  doc.setFontSize(5);
-  doc.text(student.prenom, infoX, infoY + 9);
+  const nameLines = doc.splitTextToSize(fullName, 30);
+  doc.text(nameLines, infoX, infoY + 5);
 
-  infoY += 13;
+  infoY += nameLines.length > 1 ? 11 : 9;
 
   // Labels FACULTÉ et PROMOTION côte à côte
   doc.setFillColor(...colors.secondary);
@@ -858,13 +867,15 @@ const renderPremiumRecto = async (
   doc.setFont("helvetica", "bold");
   doc.text("PROMOTION", infoX + 23.5, infoY + 0.3);
 
+  // Valeur FACULTÉ avec retour à la ligne
   doc.setTextColor(255, 255, 255);
-  doc.setFontSize(4.5);
+  doc.setFontSize(4);
   doc.setFont("helvetica", "bold");
-  doc.text(student.faculte.substring(0, 18), infoX, infoY + 5);
-  doc.text(student.promotion, infoX + 22, infoY + 5);
+  const faculteLines = doc.splitTextToSize(student.faculte, 18);
+  doc.text(faculteLines, infoX, infoY + 4.5);
+  doc.text(student.promotion, infoX + 22, infoY + 4.5);
 
-  infoY += 9;
+  infoY += faculteLines.length > 1 ? 10 : 8;
 
   // Label ANNÉE
   doc.setFillColor(...colors.secondary);
