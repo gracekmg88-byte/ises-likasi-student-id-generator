@@ -3,8 +3,8 @@ import { v4 as uuidv4 } from "uuid";
 
 const STORAGE_KEY = "ises_students";
 
-// Helper pour compresser les images (réduire la qualité)
-const compressImage = (base64: string, maxWidth = 300, quality = 0.6): Promise<string> => {
+// Compression agressive des images pour économiser l'espace
+const compressImage = (base64: string, maxWidth = 150, quality = 0.3): Promise<string> => {
   return new Promise((resolve) => {
     if (!base64 || !base64.startsWith('data:image')) {
       resolve(base64);
@@ -29,16 +29,78 @@ const compressImage = (base64: string, maxWidth = 300, quality = 0.6): Promise<s
 };
 
 // Helper pour vérifier l'espace localStorage disponible
-const getStorageUsage = (): { used: number; available: number } => {
+const getStorageUsage = (): { used: number; available: number; percentage: number } => {
   let used = 0;
   for (const key in localStorage) {
     if (localStorage.hasOwnProperty(key)) {
       used += localStorage.getItem(key)?.length || 0;
     }
   }
-  // Estimation de la limite (généralement 5MB)
-  const limit = 5 * 1024 * 1024;
-  return { used, available: limit - used };
+  const limit = 5 * 1024 * 1024; // 5MB
+  return { 
+    used, 
+    available: limit - used,
+    percentage: Math.round((used / limit) * 100)
+  };
+};
+
+// Nettoyer les anciennes données pour libérer de l'espace
+const cleanupOldData = (): void => {
+  // Supprimer les clés orphelines ou temporaires
+  const keysToCheck = ['temp_', 'cache_', 'draft_'];
+  for (const key in localStorage) {
+    if (keysToCheck.some(prefix => key.startsWith(prefix))) {
+      localStorage.removeItem(key);
+    }
+  }
+};
+
+// Recompresser toutes les photos existantes pour libérer de l'espace
+export const optimizeStorage = async (): Promise<{ freed: number; newSize: number }> => {
+  const students = getStudents();
+  const oldSize = localStorage.getItem(STORAGE_KEY)?.length || 0;
+  
+  // Recompresser toutes les photos avec une compression plus agressive
+  const optimizedStudents = await Promise.all(
+    students.map(async (student) => {
+      if (student.photo && student.photo.length > 5000) {
+        const compressed = await compressImage(student.photo, 120, 0.25);
+        return { ...student, photo: compressed };
+      }
+      return student;
+    })
+  );
+  
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(optimizedStudents));
+  const newSize = localStorage.getItem(STORAGE_KEY)?.length || 0;
+  
+  return {
+    freed: Math.round((oldSize - newSize) / 1024),
+    newSize: Math.round(newSize / 1024)
+  };
+};
+
+// Supprimer les photos des anciens étudiants pour libérer de l'espace
+export const removeOldPhotos = (keepLast: number = 10): { removed: number } => {
+  const students = getStudents();
+  if (students.length <= keepLast) return { removed: 0 };
+  
+  // Trier par date de création et supprimer les photos des plus anciens
+  const sorted = [...students].sort((a, b) => 
+    new Date(b.dateCreation).getTime() - new Date(a.dateCreation).getTime()
+  );
+  
+  let removed = 0;
+  const updated = sorted.map((student, index) => {
+    if (index >= keepLast && student.photo) {
+      removed++;
+      return { ...student, photo: '' };
+    }
+    return student;
+  });
+  
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+  return { removed };
 };
 
 export const getStudents = (): Student[] => {
@@ -57,13 +119,16 @@ export const getStudentByQRCode = (qrCodeData: string): Student | undefined => {
 };
 
 export const addStudent = async (studentData: Omit<Student, "id" | "qrCodeData" | "dateCreation">): Promise<Student> => {
+  // Nettoyer avant d'ajouter
+  cleanupOldData();
+  
   const students = getStudents();
   const id = uuidv4();
   
-  // Compresser la photo si elle existe
+  // Compresser la photo avec compression agressive
   let compressedPhoto = studentData.photo;
   if (studentData.photo) {
-    compressedPhoto = await compressImage(studentData.photo, 250, 0.5);
+    compressedPhoto = await compressImage(studentData.photo, 150, 0.3);
   }
   
   const newStudent: Student = {
@@ -80,13 +145,28 @@ export const addStudent = async (studentData: Omit<Student, "id" | "qrCodeData" 
     localStorage.setItem(STORAGE_KEY, JSON.stringify(students));
   } catch (error) {
     if (error instanceof DOMException && error.name === 'QuotaExceededError') {
-      // Nettoyer les anciens étudiants pour libérer de l'espace
-      const { available } = getStorageUsage();
-      console.warn(`Espace disponible: ${Math.round(available / 1024)}KB`);
+      // Tenter d'optimiser automatiquement
+      console.log("Quota dépassé, tentative d'optimisation...");
       
-      throw new Error("QUOTA_EXCEEDED: L'espace de stockage est plein. Veuillez supprimer des étudiants existants ou réduire la taille des photos.");
+      // Étape 1: Optimiser les photos existantes
+      await optimizeStorage();
+      
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(students));
+      } catch (retryError) {
+        // Étape 2: Supprimer les photos des anciens étudiants
+        removeOldPhotos(5);
+        
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(students));
+        } catch (finalError) {
+          const { percentage } = getStorageUsage();
+          throw new Error(`QUOTA_EXCEEDED: Stockage plein (${percentage}% utilisé). Supprimez des étudiants dans la liste.`);
+        }
+      }
+    } else {
+      throw error;
     }
-    throw error;
   }
   
   return newStudent;
@@ -106,7 +186,7 @@ export const updateStudent = async (id: string, updates: Partial<Student>): Prom
   
   // Compresser la nouvelle photo si elle existe
   if (updates.photo) {
-    updates.photo = await compressImage(updates.photo, 250, 0.5);
+    updates.photo = await compressImage(updates.photo, 150, 0.3);
   }
   
   students[index] = { ...students[index], ...updates };
@@ -115,9 +195,15 @@ export const updateStudent = async (id: string, updates: Partial<Student>): Prom
     localStorage.setItem(STORAGE_KEY, JSON.stringify(students));
   } catch (error) {
     if (error instanceof DOMException && error.name === 'QuotaExceededError') {
-      throw new Error("QUOTA_EXCEEDED: L'espace de stockage est plein. Veuillez supprimer des étudiants existants.");
+      await optimizeStorage();
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(students));
+      } catch (retryError) {
+        throw new Error("QUOTA_EXCEEDED: Stockage plein. Supprimez des étudiants.");
+      }
+    } else {
+      throw error;
     }
-    throw error;
   }
   
   return students[index];
@@ -127,11 +213,13 @@ export const clearAllStudents = (): void => {
   localStorage.removeItem(STORAGE_KEY);
 };
 
-export const getStorageInfo = (): { studentCount: number; usedKB: number } => {
+export const getStorageInfo = (): { studentCount: number; usedKB: number; percentage: number; availableKB: number } => {
   const students = getStudents();
-  const data = localStorage.getItem(STORAGE_KEY) || '';
+  const { used, available, percentage } = getStorageUsage();
   return {
     studentCount: students.length,
-    usedKB: Math.round(data.length / 1024)
+    usedKB: Math.round(used / 1024),
+    percentage,
+    availableKB: Math.round(available / 1024)
   };
 };
