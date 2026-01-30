@@ -264,8 +264,8 @@ const renderClassicRecto = async (
   doc.circle(8, 7, 5.5, "F");
   if (institution.logoGauche) {
     try {
-      // Logo agrandi pour remplir tout le cercle - dimensions identiques au verso
-      doc.addImage(institution.logoGauche, "PNG", 2.5, 1.5, 11, 11);
+      // Logo agrandi pour remplir tout le cercle - mêmes proportions que le verso
+      doc.addImage(institution.logoGauche, "PNG", 2, 1, 12, 12);
     } catch (e) {}
   }
 
@@ -274,24 +274,24 @@ const renderClassicRecto = async (
   doc.circle(width - 8, 7, 5.5, "F");
   if (institution.logoDroite) {
     try {
-      doc.addImage(institution.logoDroite, "PNG", width - 13.5, 1.5, 11, 11);
+      doc.addImage(institution.logoDroite, "PNG", width - 14, 1, 12, 12);
     } catch (e) {}
   } else if (institution.logoGauche) {
     try {
-      doc.addImage(institution.logoGauche, "PNG", width - 13.5, 1.5, 11, 11);
+      doc.addImage(institution.logoGauche, "PNG", width - 14, 1, 12, 12);
     } catch (e) {}
   }
 
-  // Texte en-tête - titre ENSEIGNEMENT SUPÉRIEUR plus visible
+  // Texte en-tête - titre ENSEIGNEMENT SUPÉRIEUR plus grand (hiérarchie)
   doc.setTextColor(255, 255, 255);
-  doc.setFontSize(4.5);
+  doc.setFontSize(5);
   doc.setFont("helvetica", "bold");
   const tutelleParts = institution.tutelle.split("–");
   doc.text(tutelleParts[0]?.trim() || "ENSEIGNEMENT SUPÉRIEUR ET UNIVERSITAIRE", width / 2, 4, { align: "center" });
 
-  // Nom institution
+  // Nom institution - légèrement plus petit que le titre principal
   doc.setTextColor(255, 255, 255);
-  doc.setFontSize(5);
+  doc.setFontSize(4);
   doc.setFont("helvetica", "bold");
   doc.text(institution.nom.substring(0, 45), width / 2, 7.5, { align: "center" });
 
