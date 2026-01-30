@@ -146,32 +146,32 @@ const StudentCard = ({ student, institution, template, side = "recto" }: Student
       <div className="bg-gradient-to-r from-primary to-primary/90 text-primary-foreground py-1.5 px-3">
         <div className="flex items-center justify-between">
           {/* Logo gauche - agrandi pour remplir le cercle (comme le verso) */}
-          <div className="w-12 h-12 rounded-full overflow-hidden bg-white flex items-center justify-center">
+          <div className="w-14 h-14 rounded-full overflow-hidden bg-white flex items-center justify-center p-0.5">
             {institution.logoGauche ? (
-              <img src={institution.logoGauche} alt="Logo" className="w-full h-full object-cover" />
+              <img src={institution.logoGauche} alt="Logo" className="w-full h-full object-cover rounded-full" />
             ) : (
               <div className="text-[6px] text-center leading-tight font-bold text-primary">RDC</div>
             )}
           </div>
           
           <div className="text-center flex-1 px-2">
-            <p className="text-[9px] font-bold tracking-wider uppercase leading-tight">
+            <p className="text-[10px] font-bold tracking-wider uppercase leading-tight">
               {institution.tutelle.split("–")[0]}
             </p>
-            <p className="text-[6px] font-semibold text-[#f5c538]">
+            <p className="text-[5px] font-semibold text-[#f5c538]">
               {institution.tutelle.split("–")[1] || "Enseignement Supérieur"}
             </p>
-            <p className="text-[8px] font-bold tracking-wide mt-0.5 bg-[#f5c538] text-[#0f172a] px-2 py-0.5 inline-block rounded-sm">
+            <p className="text-[7px] font-bold tracking-wide mt-0.5 bg-[#f5c538] text-[#0f172a] px-2 py-0.5 inline-block rounded-sm">
               CARTE D'ÉTUDIANT
             </p>
           </div>
           
           {/* Logo droite - agrandi pour remplir le cercle (comme le verso) */}
-          <div className="w-12 h-12 rounded-full overflow-hidden bg-white border-2 border-secondary">
+          <div className="w-14 h-14 rounded-full overflow-hidden bg-white border-2 border-secondary p-0.5">
             {institution.logoDroite ? (
-              <img src={institution.logoDroite} alt="Logo" className="w-full h-full object-cover" />
+              <img src={institution.logoDroite} alt="Logo" className="w-full h-full object-cover rounded-full" />
             ) : institution.logoGauche ? (
-              <img src={institution.logoGauche} alt="Logo" className="w-full h-full object-cover" />
+              <img src={institution.logoGauche} alt="Logo" className="w-full h-full object-cover rounded-full" />
             ) : (
               <div className="w-full h-full flex items-center justify-center text-[5px] font-bold text-primary">LOGO</div>
             )}
@@ -180,7 +180,7 @@ const StudentCard = ({ student, institution, template, side = "recto" }: Student
       </div>
 
       <div className="bg-primary/10 py-1 text-center border-y border-primary/20">
-        <p className="text-[9px] font-bold text-primary uppercase tracking-wide px-2 leading-tight">
+        <p className="text-[7px] font-bold text-primary uppercase tracking-wide px-2 leading-tight">
           {institution.nom}
         </p>
       </div>
