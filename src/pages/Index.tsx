@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
-import { Student, Institution, CardTemplate } from "@/types/student";
+import { Student, Institution, CardTemplate, AppUser } from "@/types/student";
 import { getStudents } from "@/lib/studentStore";
 import { getInstitutions, getDefaultInstitution, getInstitutionById } from "@/lib/institutionStore";
-import { getTemplates, getDefaultTemplate, getTemplateById } from "@/lib/templateStore";
+import { getTemplates, getDefaultTemplate, getTemplateById, getAvailableTemplates } from "@/lib/templateStore";
 import { generateStudentCardPDF } from "@/lib/pdfGenerator";
 import { logout, isAuthenticated, getCurrentAdmin } from "@/lib/adminStore";
+import { getCurrentUser, isUserAuthenticated, logoutUser, isUserActive, getRemainingTrialDays } from "@/lib/userStore";
 import LoginForm from "@/components/LoginForm";
 import StudentForm from "@/components/StudentForm";
 import StudentList from "@/components/StudentList";
@@ -12,37 +13,63 @@ import StudentCard from "@/components/StudentCard";
 import InstitutionManager from "@/components/InstitutionManager";
 import TemplateSelector from "@/components/TemplateSelector";
 import AdminManager from "@/components/AdminManager";
+import UserManager from "@/components/UserManager";
 import ChangePasswordDialog from "@/components/ChangePasswordDialog";
+import PaymentSection from "@/components/PaymentSection";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { LogOut, GraduationCap, QrCode, Download, Settings, Users, Building2 } from "lucide-react";
+import { 
+  LogOut, 
+  GraduationCap, 
+  QrCode, 
+  Download, 
+  Settings, 
+  Users, 
+  Building2,
+  Crown,
+  Clock,
+  CreditCard,
+  RotateCcw
+} from "lucide-react";
 import { toast } from "sonner";
 import { Link } from "react-router-dom";
 
 const Index = () => {
   const [authenticated, setAuthenticated] = useState(false);
+  const [isAdminMode, setIsAdminMode] = useState(false);
   const [students, setStudents] = useState<Student[]>([]);
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [cardSide, setCardSide] = useState<"recto" | "verso">("recto");
   
-  // Institution et Template sélectionnés
   const [selectedInstitutionId, setSelectedInstitutionId] = useState<string>("");
   const [selectedTemplateId, setSelectedTemplateId] = useState<string>("classic");
   
-  // Admin actuel
   const [currentAdmin, setCurrentAdmin] = useState<ReturnType<typeof getCurrentAdmin>>(undefined);
+  const [currentUser, setCurrentUser] = useState<AppUser | undefined>(undefined);
 
   useEffect(() => {
-    const auth = isAuthenticated();
-    setAuthenticated(auth);
-    if (auth) {
+    const adminAuth = isAuthenticated();
+    const userAuth = isUserAuthenticated();
+    
+    if (adminAuth) {
+      setAuthenticated(true);
+      setIsAdminMode(true);
       setCurrentAdmin(getCurrentAdmin());
+    } else if (userAuth) {
+      const user = getCurrentUser();
+      if (user && isUserActive(user)) {
+        setAuthenticated(true);
+        setIsAdminMode(false);
+        setCurrentUser(user);
+      }
     }
     setIsLoading(false);
   }, []);
@@ -50,10 +77,8 @@ const Index = () => {
   useEffect(() => {
     if (authenticated) {
       refreshStudents();
-      // Initialiser l'institution par défaut
       const defaultInst = getDefaultInstitution();
       setSelectedInstitutionId(defaultInst.id);
-      // Initialiser le template par défaut
       const defaultTemplate = getDefaultTemplate();
       setSelectedTemplateId(defaultTemplate.id);
     }
@@ -63,16 +88,27 @@ const Index = () => {
     setStudents(getStudents());
   };
 
-  const handleLoginSuccess = () => {
+  const handleLoginSuccess = (isAdmin: boolean) => {
     setAuthenticated(true);
-    setCurrentAdmin(getCurrentAdmin());
+    setIsAdminMode(isAdmin);
+    if (isAdmin) {
+      setCurrentAdmin(getCurrentAdmin());
+    } else {
+      setCurrentUser(getCurrentUser());
+    }
   };
 
   const handleLogout = () => {
-    logout();
+    if (isAdminMode) {
+      logout();
+    } else {
+      logoutUser();
+    }
     setAuthenticated(false);
+    setIsAdminMode(false);
     setStudents([]);
     setCurrentAdmin(undefined);
+    setCurrentUser(undefined);
   };
 
   const handleStudentAdded = (student: Student) => {
@@ -80,14 +116,27 @@ const Index = () => {
     setSelectedStudent(student);
   };
 
+  const canUseTemplate = (template: CardTemplate): boolean => {
+    if (isAdminMode) return true;
+    if (!currentUser) return false;
+    if (currentUser.isPremium) return true;
+    return !template.isPremium;
+  };
+
   const handleGeneratePDF = async (student: Student) => {
+    const template = getTemplateById(selectedTemplateId) || getDefaultTemplate();
+    
+    if (!canUseTemplate(template)) {
+      toast.error("Ce modèle est réservé aux utilisateurs Premium");
+      return;
+    }
+    
     try {
-      toast.loading("Génération du PDF en cours...");
+      toast.loading("Génération du PDF Recto-Verso en cours...");
       const institution = getInstitutionById(student.institutionId || selectedInstitutionId) || getDefaultInstitution();
-      const template = getTemplateById(selectedTemplateId) || getDefaultTemplate();
       await generateStudentCardPDF(student, institution, template);
       toast.dismiss();
-      toast.success("Carte d'étudiant générée avec succès !");
+      toast.success("Carte Recto-Verso générée avec succès !");
     } catch (error) {
       toast.dismiss();
       toast.error("Erreur lors de la génération du PDF");
@@ -115,6 +164,8 @@ const Index = () => {
     return <LoginForm onLoginSuccess={handleLoginSuccess} />;
   }
 
+  const userTrialDays = currentUser ? getRemainingTrialDays(currentUser) : 0;
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5">
       {/* Header */}
@@ -130,18 +181,36 @@ const Index = () => {
                     className="w-full h-full object-contain"
                   />
                 ) : (
-                  <span className="text-primary text-xs font-bold">ISES</span>
+                  <span className="text-primary text-xs font-bold">KMG</span>
                 )}
               </div>
               <div>
-                <h1 className="text-lg font-serif font-bold">Gestion Cartes Étudiants</h1>
-                <p className="text-xs text-primary-foreground/80">
-                  {currentAdmin?.nom || "Administrateur"}
-                </p>
+                <h1 className="text-lg font-serif font-bold">KMG – Cartes Étudiants</h1>
+                <div className="flex items-center gap-2">
+                  <p className="text-xs text-primary-foreground/80">
+                    {isAdminMode ? currentAdmin?.nom || "Administrateur" : currentUser?.nom || "Utilisateur"}
+                  </p>
+                  {!isAdminMode && currentUser && (
+                    currentUser.isPremium ? (
+                      <Badge className="bg-secondary text-secondary-foreground text-[10px] gap-1">
+                        <Crown className="h-3 w-3" />
+                        Premium
+                      </Badge>
+                    ) : (
+                      <Badge variant="outline" className="text-[10px] gap-1 border-primary-foreground/30 text-primary-foreground">
+                        <Clock className="h-3 w-3" />
+                        Essai ({userTrialDays}j)
+                      </Badge>
+                    )
+                  )}
+                  {isAdminMode && (
+                    <Badge className="bg-destructive/80 text-[10px]">Admin</Badge>
+                  )}
+                </div>
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <ChangePasswordDialog />
+              {isAdminMode && <ChangePasswordDialog />}
               <Link to="/verification">
                 <Button
                   variant="outline"
@@ -169,7 +238,7 @@ const Index = () => {
       {/* Main content */}
       <main className="container mx-auto px-4 py-6">
         <Tabs defaultValue="students" className="space-y-6">
-          <TabsList className="grid w-full max-w-md grid-cols-3">
+          <TabsList className={`grid w-full max-w-lg ${isAdminMode ? 'grid-cols-4' : 'grid-cols-3'}`}>
             <TabsTrigger value="students" className="gap-2">
               <GraduationCap className="h-4 w-4" />
               <span className="hidden sm:inline">Étudiants</span>
@@ -178,14 +247,55 @@ const Index = () => {
               <Settings className="h-4 w-4" />
               <span className="hidden sm:inline">Configuration</span>
             </TabsTrigger>
-            <TabsTrigger value="admins" className="gap-2">
-              <Users className="h-4 w-4" />
-              <span className="hidden sm:inline">Admins</span>
-            </TabsTrigger>
+            {!isAdminMode && !currentUser?.isPremium && (
+              <TabsTrigger value="premium" className="gap-2">
+                <Crown className="h-4 w-4" />
+                <span className="hidden sm:inline">Premium</span>
+              </TabsTrigger>
+            )}
+            {isAdminMode && (
+              <>
+                <TabsTrigger value="users" className="gap-2">
+                  <Users className="h-4 w-4" />
+                  <span className="hidden sm:inline">Utilisateurs</span>
+                </TabsTrigger>
+                <TabsTrigger value="admins" className="gap-2">
+                  <Building2 className="h-4 w-4" />
+                  <span className="hidden sm:inline">Admins</span>
+                </TabsTrigger>
+              </>
+            )}
           </TabsList>
 
           {/* Tab Étudiants */}
           <TabsContent value="students" className="space-y-6">
+            {/* Bannière Premium pour utilisateurs gratuits */}
+            {!isAdminMode && currentUser && !currentUser.isPremium && (
+              <div className="bg-gradient-to-r from-secondary/20 via-secondary/10 to-secondary/20 border border-secondary/30 rounded-lg p-4">
+                <div className="flex items-center justify-between gap-4">
+                  <div className="flex items-center gap-3">
+                    <Crown className="h-8 w-8 text-secondary" />
+                    <div>
+                      <p className="font-semibold text-foreground">Passez à Premium</p>
+                      <p className="text-sm text-muted-foreground">
+                        Accédez à tous les modèles de cartes et fonctionnalités avancées
+                      </p>
+                    </div>
+                  </div>
+                  <Button 
+                    className="bg-secondary text-secondary-foreground hover:bg-secondary/90 gap-2"
+                    onClick={() => {
+                      const premiumTab = document.querySelector('[value="premium"]') as HTMLElement;
+                      premiumTab?.click();
+                    }}
+                  >
+                    <Crown className="h-4 w-4" />
+                    Voir les offres
+                  </Button>
+                </div>
+              </div>
+            )}
+
             {/* Stats */}
             <div className="bg-card rounded-xl shadow-lg p-6 border border-primary/10">
               <div className="flex items-center gap-4">
@@ -224,16 +334,33 @@ const Index = () => {
               <TemplateSelector
                 selectedTemplateId={selectedTemplateId}
                 onSelectTemplate={setSelectedTemplateId}
+                isPremium={isAdminMode || currentUser?.isPremium || false}
               />
             </div>
           </TabsContent>
 
+          {/* Tab Premium (utilisateurs uniquement) */}
+          {!isAdminMode && !currentUser?.isPremium && (
+            <TabsContent value="premium">
+              <PaymentSection />
+            </TabsContent>
+          )}
+
+          {/* Tab Utilisateurs (admin) */}
+          {isAdminMode && (
+            <TabsContent value="users">
+              <UserManager />
+            </TabsContent>
+          )}
+
           {/* Tab Admins */}
-          <TabsContent value="admins">
-            <div className="max-w-xl">
-              <AdminManager />
-            </div>
-          </TabsContent>
+          {isAdminMode && (
+            <TabsContent value="admins">
+              <div className="max-w-xl">
+                <AdminManager />
+              </div>
+            </TabsContent>
+          )}
         </Tabs>
       </main>
 
@@ -241,16 +368,31 @@ const Index = () => {
       <Dialog open={!!selectedStudent} onOpenChange={() => setSelectedStudent(null)}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
-            <DialogTitle className="font-serif text-primary">
-              Aperçu de la carte d'étudiant
+            <DialogTitle className="font-serif text-primary flex items-center justify-between">
+              <span>Aperçu de la carte d'étudiant</span>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCardSide(cardSide === "recto" ? "verso" : "recto")}
+                className="gap-2"
+              >
+                <RotateCcw className="h-4 w-4" />
+                {cardSide === "recto" ? "Voir Verso" : "Voir Recto"}
+              </Button>
             </DialogTitle>
           </DialogHeader>
           {selectedStudent && (
             <div className="space-y-4">
+              <div className="text-center">
+                <Badge variant="outline" className="mb-2">
+                  {cardSide === "recto" ? "RECTO" : "VERSO"}
+                </Badge>
+              </div>
               <StudentCard 
                 student={selectedStudent} 
                 institution={getSelectedInstitution()}
                 template={getSelectedTemplate()}
+                side={cardSide}
               />
               <div className="flex gap-3 justify-end">
                 <Button
@@ -262,11 +404,17 @@ const Index = () => {
                 <Button
                   className="btn-gold gap-2"
                   onClick={() => handleGeneratePDF(selectedStudent)}
+                  disabled={!canUseTemplate(getSelectedTemplate())}
                 >
                   <Download className="h-4 w-4" />
                   Télécharger PDF
                 </Button>
               </div>
+              {!canUseTemplate(getSelectedTemplate()) && (
+                <p className="text-center text-sm text-destructive">
+                  Ce modèle est réservé aux utilisateurs Premium
+                </p>
+              )}
             </div>
           )}
         </DialogContent>

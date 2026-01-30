@@ -6,15 +6,14 @@ interface StudentCardProps {
   student: Student;
   institution: Institution;
   template: CardTemplate;
-  size?: "preview" | "full";
+  side?: "recto" | "verso";
 }
 
-const StudentCard = ({ student, institution, template, size = "preview" }: StudentCardProps) => {
+const StudentCard = ({ student, institution, template, side = "recto" }: StudentCardProps) => {
   const [qrCodeUrl, setQrCodeUrl] = useState<string>("");
 
   useEffect(() => {
     const generateQR = async () => {
-      // Si QR personnalisé, l'utiliser
       if (student.customQrCode) {
         setQrCodeUrl(student.customQrCode);
         return;
@@ -38,25 +37,112 @@ const StudentCard = ({ student, institution, template, size = "preview" }: Stude
     generateQR();
   }, [student.qrCodeData, student.customQrCode]);
 
-  // Render selon le template
+  const qrOnVerso = student.qrPosition === "verso";
+
   const renderCard = () => {
+    if (side === "verso") {
+      return renderVerso();
+    }
+    
     switch (template.style) {
       case "modern":
-        return renderModernCard();
+        return renderModernRecto();
       case "advanced":
-        return renderAdvancedCard();
+        return renderAdvancedRecto();
+      case "premium":
+        return renderPremiumRecto();
       default:
-        return renderClassicCard();
+        return renderClassicRecto();
     }
   };
 
-  // Template Classique
-  const renderClassicCard = () => (
+  // ===== VERSO COMMUN =====
+  const renderVerso = () => (
+    <div className="relative h-full bg-gradient-to-br from-primary/10 via-card to-secondary/5 rounded-lg shadow-2xl border-4 border-primary overflow-hidden">
+      {/* En-tête */}
+      <div className="bg-gradient-to-r from-primary to-primary/90 text-primary-foreground py-2 px-3">
+        <div className="flex items-center justify-between">
+          <div className="w-8 h-8 rounded-full overflow-hidden bg-white/20 flex items-center justify-center">
+            {institution.logoGauche ? (
+              <img src={institution.logoGauche} alt="Logo" className="w-full h-full object-contain p-0.5" />
+            ) : (
+              <div className="text-[5px] text-center font-bold">RDC</div>
+            )}
+          </div>
+          <div className="text-center flex-1 px-2">
+            <p className="text-[7px] font-bold tracking-wider uppercase">CARTE D'ÉTUDIANT</p>
+            <p className="text-[5px] text-secondary">{institution.nom}</p>
+          </div>
+          <div className="w-8 h-8 rounded-full overflow-hidden bg-white border border-secondary">
+            {institution.logoDroite ? (
+              <img src={institution.logoDroite} alt="Logo" className="w-full h-full object-contain p-0.5" />
+            ) : institution.logoGauche ? (
+              <img src={institution.logoGauche} alt="Logo" className="w-full h-full object-contain p-0.5" />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center text-[4px] font-bold text-primary">LOGO</div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Contenu Verso */}
+      <div className="p-3 space-y-2">
+        {/* QR Code au verso si configuré */}
+        {qrOnVerso && qrCodeUrl && (
+          <div className="flex justify-center">
+            <div className="w-20 h-20 bg-white rounded-lg border-2 border-primary/20 p-1 shadow-md">
+              <img src={qrCodeUrl} alt="QR Code" className="w-full h-full" />
+            </div>
+          </div>
+        )}
+
+        {/* Texte officiel */}
+        <div className="text-center space-y-1.5">
+          <p className="text-[7px] text-muted-foreground leading-tight">
+            {institution.texteVerso || 
+              "Cette carte est strictement personnelle et non transférable. Elle est valide uniquement pour l'année académique en cours. En cas de perte, prière de la retourner à l'établissement."}
+          </p>
+        </div>
+
+        {/* Zone signature et cachet */}
+        <div className="flex justify-between items-end mt-3 pt-2 border-t border-primary/20">
+          <div className="text-center">
+            <div className="w-16 h-12 border border-dashed border-primary/30 rounded flex items-center justify-center mb-1 bg-white/50">
+              {institution.cachetImage ? (
+                <img src={institution.cachetImage} alt="Cachet" className="w-full h-full object-contain p-1" />
+              ) : (
+                <span className="text-[6px] text-muted-foreground">Cachet</span>
+              )}
+            </div>
+          </div>
+          
+          <div className="text-center">
+            <div className="w-20 h-10 flex items-end justify-center">
+              {institution.signatureImage ? (
+                <img src={institution.signatureImage} alt="Signature" className="max-w-full max-h-full object-contain" />
+              ) : (
+                <div className="w-full border-t border-primary/50"></div>
+              )}
+            </div>
+            <p className="text-[7px] font-medium text-primary mt-1">{institution.mentionSignature}</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Pied de page */}
+      <div className="absolute bottom-0 left-0 right-0 bg-primary/5 border-t border-primary/20 py-1 px-3">
+        <p className="text-[6px] text-center text-muted-foreground">
+          Vérifiez l'authenticité : scannez le QR Code ou visitez notre portail de vérification
+        </p>
+      </div>
+    </div>
+  );
+
+  // ===== RECTO CLASSIQUE =====
+  const renderClassicRecto = () => (
     <div className="relative h-full bg-gradient-to-br from-primary/5 via-card to-secondary/10 rounded-lg shadow-2xl border-4 border-primary overflow-hidden">
-      {/* En-tête officiel */}
       <div className="bg-gradient-to-r from-primary to-primary/90 text-primary-foreground py-1.5 px-3">
         <div className="flex items-center justify-between">
-          {/* Logo Gauche */}
           <div className="w-10 h-10 rounded-full overflow-hidden bg-white/20 flex items-center justify-center">
             {institution.logoGauche ? (
               <img src={institution.logoGauche} alt="Logo" className="w-full h-full object-contain p-0.5" />
@@ -77,7 +163,6 @@ const StudentCard = ({ student, institution, template, size = "preview" }: Stude
             </p>
           </div>
           
-          {/* Logo Droite */}
           <div className="w-10 h-10 rounded-full overflow-hidden bg-white border-2 border-secondary">
             {institution.logoDroite ? (
               <img src={institution.logoDroite} alt="Logo" className="w-full h-full object-contain p-0.5" />
@@ -90,16 +175,13 @@ const StudentCard = ({ student, institution, template, size = "preview" }: Stude
         </div>
       </div>
 
-      {/* Nom institution */}
       <div className="bg-primary/10 py-1 text-center border-y border-primary/20">
         <p className="text-[9px] font-bold text-primary uppercase tracking-wide px-2 leading-tight">
           {institution.nom}
         </p>
       </div>
 
-      {/* Contenu principal */}
       <div className="flex gap-3 p-3">
-        {/* Photo */}
         <div className="flex-shrink-0">
           <div className="w-20 h-24 rounded border-2 border-primary/30 overflow-hidden bg-muted shadow-md">
             {student.photo ? (
@@ -110,7 +192,6 @@ const StudentCard = ({ student, institution, template, size = "preview" }: Stude
           </div>
         </div>
 
-        {/* Informations */}
         <div className="flex-1 min-w-0 text-[10px] space-y-1.5">
           <div>
             <span className="text-muted-foreground text-[8px] uppercase">Noms</span>
@@ -132,24 +213,19 @@ const StudentCard = ({ student, institution, template, size = "preview" }: Stude
           </div>
         </div>
 
-        {/* QR Code */}
-        <div className="flex-shrink-0 flex flex-col items-center">
-          {qrCodeUrl && (
+        {!qrOnVerso && qrCodeUrl && (
+          <div className="flex-shrink-0 flex flex-col items-center">
             <div className="w-16 h-16 bg-white rounded border border-primary/20 p-1 shadow-sm">
               <img src={qrCodeUrl} alt="QR Code" className="w-full h-full" />
             </div>
-          )}
-        </div>
+          </div>
+        )}
       </div>
 
-      {/* Pied de page */}
       <div className="absolute bottom-0 left-0 right-0 bg-primary/5 border-t border-primary/20 py-1.5 px-3">
         <div className="flex justify-between items-end">
           <div className="text-[8px]">
             <p className="text-muted-foreground">{institution.mentionSignature}</p>
-            <div className="w-16 border-t border-dashed border-primary/40 mt-3 pt-0.5">
-              <p className="text-muted-foreground italic">Signature</p>
-            </div>
           </div>
           <div className="text-right">
             <p className="text-[8px] text-muted-foreground">Date d'expiration</p>
@@ -160,13 +236,11 @@ const StudentCard = ({ student, institution, template, size = "preview" }: Stude
     </div>
   );
 
-  // Template Moderne
-  const renderModernCard = () => (
+  // ===== RECTO MODERNE =====
+  const renderModernRecto = () => (
     <div className="relative h-full bg-gradient-to-br from-slate-50 to-slate-100 rounded-xl shadow-xl border border-slate-200 overflow-hidden">
-      {/* En-tête minimaliste */}
       <div className="bg-gradient-to-r from-primary/90 to-primary/70 text-primary-foreground py-2 px-4">
         <div className="flex items-center gap-3">
-          {/* Logo */}
           <div className="w-8 h-8 rounded-lg overflow-hidden bg-white/90 shadow-sm">
             {(institution.logoGauche || institution.logoDroite) ? (
               <img src={institution.logoGauche || institution.logoDroite} alt="Logo" className="w-full h-full object-contain p-0.5" />
@@ -181,14 +255,11 @@ const StudentCard = ({ student, institution, template, size = "preview" }: Stude
         </div>
       </div>
 
-      {/* Badge carte */}
       <div className="absolute top-12 right-3 bg-secondary text-secondary-foreground px-2 py-0.5 rounded-full text-[7px] font-bold shadow-sm">
         ÉTUDIANT
       </div>
 
-      {/* Contenu */}
       <div className="flex gap-4 p-4 pt-5">
-        {/* Photo avec effet */}
         <div className="flex-shrink-0">
           <div className="w-20 h-24 rounded-xl overflow-hidden bg-white shadow-lg ring-2 ring-primary/20">
             {student.photo ? (
@@ -199,7 +270,6 @@ const StudentCard = ({ student, institution, template, size = "preview" }: Stude
           </div>
         </div>
 
-        {/* Infos avec style moderne */}
         <div className="flex-1 min-w-0 space-y-2">
           <div>
             <p className="font-bold text-base text-primary truncate">{student.nom}</p>
@@ -221,17 +291,15 @@ const StudentCard = ({ student, institution, template, size = "preview" }: Stude
           </div>
         </div>
 
-        {/* QR */}
-        <div className="flex-shrink-0">
-          {qrCodeUrl && (
+        {!qrOnVerso && qrCodeUrl && (
+          <div className="flex-shrink-0">
             <div className="w-14 h-14 bg-white rounded-lg shadow-md p-1">
               <img src={qrCodeUrl} alt="QR Code" className="w-full h-full" />
             </div>
-          )}
-        </div>
+          </div>
+        )}
       </div>
 
-      {/* Footer minimaliste */}
       <div className="absolute bottom-0 left-0 right-0 bg-white/80 backdrop-blur-sm border-t border-slate-200 py-1.5 px-4">
         <div className="flex justify-between items-center text-[8px]">
           <span className="text-muted-foreground">{institution.mentionSignature}</span>
@@ -241,17 +309,14 @@ const StudentCard = ({ student, institution, template, size = "preview" }: Stude
     </div>
   );
 
-  // Template Avancé
-  const renderAdvancedCard = () => (
+  // ===== RECTO AVANCÉ =====
+  const renderAdvancedRecto = () => (
     <div className="relative h-full bg-gradient-to-br from-primary/20 via-background to-secondary/20 rounded-2xl shadow-2xl border-2 border-primary/30 overflow-hidden">
-      {/* Motif décoratif */}
       <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-secondary/30 to-transparent rounded-bl-full" />
       <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-primary/20 to-transparent rounded-tr-full" />
 
-      {/* En-tête avec dégradé */}
       <div className="relative bg-gradient-to-r from-primary via-primary/90 to-secondary/80 text-primary-foreground py-2 px-3">
         <div className="flex items-center justify-between">
-          {/* Logo Gauche */}
           <div className="w-9 h-9 rounded-full overflow-hidden bg-white shadow-lg ring-2 ring-white/50">
             {institution.logoGauche ? (
               <img src={institution.logoGauche} alt="Logo" className="w-full h-full object-contain" />
@@ -269,7 +334,6 @@ const StudentCard = ({ student, institution, template, size = "preview" }: Stude
             </div>
           </div>
           
-          {/* Logo Droite */}
           <div className="w-9 h-9 rounded-full overflow-hidden bg-white shadow-lg ring-2 ring-secondary/50">
             {institution.logoDroite ? (
               <img src={institution.logoDroite} alt="Logo" className="w-full h-full object-contain" />
@@ -282,16 +346,13 @@ const StudentCard = ({ student, institution, template, size = "preview" }: Stude
         </div>
       </div>
 
-      {/* Nom institution */}
       <div className="relative py-1 text-center bg-gradient-to-r from-transparent via-primary/10 to-transparent">
         <p className="text-[9px] font-bold text-primary uppercase tracking-wide px-2">
           {institution.nom}
         </p>
       </div>
 
-      {/* Contenu avec style avancé */}
       <div className="relative flex gap-3 p-3">
-        {/* Photo avec cadre stylisé */}
         <div className="flex-shrink-0">
           <div className="relative">
             <div className="absolute -inset-1 bg-gradient-to-br from-primary to-secondary rounded-xl opacity-50 blur-sm" />
@@ -305,7 +366,6 @@ const StudentCard = ({ student, institution, template, size = "preview" }: Stude
           </div>
         </div>
 
-        {/* Informations avec style */}
         <div className="flex-1 min-w-0 space-y-1.5">
           <div className="bg-gradient-to-r from-primary/10 to-transparent rounded-lg px-2 py-1">
             <p className="text-[8px] text-primary/70 uppercase tracking-wide">Noms</p>
@@ -329,27 +389,22 @@ const StudentCard = ({ student, institution, template, size = "preview" }: Stude
           </div>
         </div>
 
-        {/* QR Code stylisé */}
-        <div className="flex-shrink-0">
-          {qrCodeUrl && (
+        {!qrOnVerso && qrCodeUrl && (
+          <div className="flex-shrink-0">
             <div className="relative">
               <div className="absolute -inset-1 bg-gradient-to-br from-primary to-secondary rounded-lg opacity-30 blur-sm" />
               <div className="relative w-14 h-14 bg-white rounded-lg shadow-lg p-1">
                 <img src={qrCodeUrl} alt="QR Code" className="w-full h-full" />
               </div>
             </div>
-          )}
-        </div>
+          </div>
+        )}
       </div>
 
-      {/* Footer stylisé */}
       <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-primary/10 to-transparent py-2 px-3">
         <div className="flex justify-between items-end">
           <div className="text-[7px]">
             <p className="text-primary/70">{institution.mentionSignature}</p>
-            <div className="w-14 border-t border-primary/40 mt-2 pt-0.5">
-              <p className="text-muted-foreground italic text-[6px]">Signature</p>
-            </div>
           </div>
           <div className="text-right">
             <p className="text-[7px] text-muted-foreground">Expiration</p>
@@ -359,6 +414,120 @@ const StudentCard = ({ student, institution, template, size = "preview" }: Stude
           </div>
         </div>
       </div>
+    </div>
+  );
+
+  // ===== RECTO PREMIUM =====
+  const renderPremiumRecto = () => (
+    <div className="relative h-full bg-gradient-to-br from-slate-900 via-slate-800 to-primary/90 rounded-xl shadow-2xl border-2 border-secondary/50 overflow-hidden">
+      {/* Motifs décoratifs */}
+      <div className="absolute inset-0 opacity-10">
+        <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_30%_20%,rgba(234,179,8,0.3),transparent_50%)]" />
+        <div className="absolute bottom-0 right-0 w-full h-full bg-[radial-gradient(circle_at_70%_80%,rgba(234,179,8,0.2),transparent_50%)]" />
+      </div>
+
+      {/* Bande dorée supérieure */}
+      <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-secondary via-secondary/80 to-secondary" />
+
+      <div className="relative pt-2 px-3">
+        <div className="flex items-center justify-between">
+          <div className="w-11 h-11 rounded-full overflow-hidden bg-white shadow-lg ring-2 ring-secondary/70">
+            {institution.logoGauche ? (
+              <img src={institution.logoGauche} alt="Logo" className="w-full h-full object-contain p-0.5" />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center text-[6px] font-bold text-primary">RDC</div>
+            )}
+          </div>
+          
+          <div className="text-center flex-1 px-2">
+            <p className="text-[5px] font-medium tracking-widest uppercase text-secondary/80">
+              {institution.tutelle.split("–")[0]}
+            </p>
+            <p className="text-[9px] font-bold tracking-wide text-white mt-0.5">
+              {institution.nom}
+            </p>
+            <div className="inline-block mt-1 bg-gradient-to-r from-secondary to-secondary/80 px-4 py-1 rounded-full shadow-lg">
+              <p className="text-[8px] font-black tracking-wider text-slate-900">CARTE D'ÉTUDIANT</p>
+            </div>
+          </div>
+          
+          <div className="w-11 h-11 rounded-full overflow-hidden bg-white shadow-lg ring-2 ring-secondary/70">
+            {institution.logoDroite ? (
+              <img src={institution.logoDroite} alt="Logo" className="w-full h-full object-contain p-0.5" />
+            ) : institution.logoGauche ? (
+              <img src={institution.logoGauche} alt="Logo" className="w-full h-full object-contain p-0.5" />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center text-[5px] font-bold text-primary">LOGO</div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      <div className="relative flex gap-3 p-3 pt-2">
+        <div className="flex-shrink-0">
+          <div className="relative">
+            <div className="absolute -inset-1 bg-gradient-to-br from-secondary to-secondary/50 rounded-lg" />
+            <div className="relative w-20 h-24 rounded-lg overflow-hidden bg-white shadow-xl border border-secondary/30">
+              {student.photo ? (
+                <img src={student.photo} alt={`${student.prenom} ${student.nom}`} className="w-full h-full object-cover" />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-muted-foreground text-xs">Photo</div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        <div className="flex-1 min-w-0 space-y-1">
+          <div>
+            <p className="text-[7px] text-secondary/70 uppercase tracking-wider">Noms</p>
+            <p className="font-bold text-sm text-white truncate">{student.nom}</p>
+            <p className="font-medium text-xs text-white/80">{student.prenom}</p>
+          </div>
+          <div className="grid grid-cols-2 gap-2 text-[9px]">
+            <div>
+              <p className="text-secondary/70 text-[7px] uppercase">Faculté</p>
+              <p className="font-semibold text-white/90">{student.faculte}</p>
+            </div>
+            <div>
+              <p className="text-secondary/70 text-[7px] uppercase">Promotion</p>
+              <p className="font-semibold text-white/90">{student.promotion}</p>
+            </div>
+          </div>
+          <div>
+            <p className="text-secondary/70 text-[7px] uppercase">Année</p>
+            <p className="font-semibold text-white/90 text-[9px]">{student.anneeAcademique}</p>
+          </div>
+        </div>
+
+        {!qrOnVerso && qrCodeUrl && (
+          <div className="flex-shrink-0 flex flex-col items-center justify-center">
+            <div className="relative">
+              <div className="absolute -inset-1 bg-gradient-to-br from-secondary to-secondary/50 rounded-lg" />
+              <div className="relative w-14 h-14 bg-white rounded-lg shadow-lg p-1">
+                <img src={qrCodeUrl} alt="QR Code" className="w-full h-full" />
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/50 to-transparent py-2 px-3">
+        <div className="flex justify-between items-end">
+          <div className="text-[7px]">
+            <p className="text-secondary/80">{institution.mentionSignature}</p>
+          </div>
+          <div className="text-right">
+            <p className="text-[6px] text-white/60">Expire le</p>
+            <p className="text-xs font-bold text-secondary">{student.dateExpiration}</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Hologramme simulé */}
+      <div className="absolute top-14 right-2 w-6 h-6 rounded-full bg-gradient-to-br from-secondary/40 via-white/20 to-secondary/40 opacity-70" />
+      
+      {/* Bande dorée inférieure */}
+      <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-secondary via-secondary/80 to-secondary" />
     </div>
   );
 

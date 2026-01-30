@@ -9,8 +9,9 @@ export interface Student {
   anneeAcademique: string;
   dateExpiration: string;
   qrCodeData: string;
-  customQrCode?: string; // QR Code personnalisé uploadé
-  institutionId?: string; // Lien vers l'institution
+  customQrCode?: string;
+  institutionId?: string;
+  qrPosition?: 'recto' | 'verso';
 }
 
 export interface Institution {
@@ -18,9 +19,12 @@ export interface Institution {
   nom: string;
   tutelle: string;
   mentionSignature: string;
-  logoGauche?: string; // Base64 ou URL
-  logoDroite?: string; // Base64 ou URL
+  logoGauche?: string;
+  logoDroite?: string;
   dateCreation: string;
+  signatureImage?: string;
+  cachetImage?: string;
+  texteVerso?: string;
 }
 
 export interface Admin {
@@ -31,11 +35,23 @@ export interface Admin {
   dateCreation: string;
 }
 
+export interface AppUser {
+  id: string;
+  email: string;
+  password: string;
+  nom: string;
+  isPremium: boolean;
+  dateCreation: string;
+  dateActivation?: string;
+  trialEndDate: string;
+}
+
 export interface CardTemplate {
   id: string;
   nom: string;
   description: string;
-  style: 'classic' | 'modern' | 'advanced';
+  style: 'classic' | 'modern' | 'advanced' | 'premium';
+  isPremium: boolean;
 }
 
 export type AdminCredentials = {
