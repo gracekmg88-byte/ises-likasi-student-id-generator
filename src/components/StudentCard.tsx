@@ -477,25 +477,40 @@ const StudentCard = ({ student, institution, template, side = "recto" }: Student
           </div>
         </div>
 
-        <div className="flex-1 min-w-0 space-y-1">
-          <div>
-            <p className="text-[7px] text-secondary/70 uppercase tracking-wider">Noms</p>
-            <p className="font-bold text-sm text-white truncate">{student.nom}</p>
+        <div className="flex-1 min-w-0 space-y-1.5">
+          {/* Champ Noms avec bande */}
+          <div className="bg-gradient-to-r from-secondary/90 to-secondary/70 rounded px-2 py-0.5 inline-block shadow-sm">
+            <p className="text-[8px] font-bold text-slate-900 uppercase tracking-wide">Noms</p>
+          </div>
+          <div className="pl-1 -mt-0.5">
+            <p className="font-bold text-sm text-white truncate leading-tight">{student.nom}</p>
             <p className="font-medium text-xs text-white/80">{student.prenom}</p>
           </div>
-          <div className="grid grid-cols-2 gap-2 text-[9px]">
+          
+          <div className="grid grid-cols-2 gap-x-2 gap-y-1">
+            {/* Champ Faculté avec bande */}
             <div>
-              <p className="text-secondary/70 text-[7px] uppercase">Faculté</p>
-              <p className="font-semibold text-white/90">{student.faculte}</p>
+              <div className="bg-gradient-to-r from-secondary/90 to-secondary/70 rounded px-1.5 py-0.5 inline-block shadow-sm">
+                <p className="text-[7px] font-bold text-slate-900 uppercase tracking-wide">Faculté</p>
+              </div>
+              <p className="font-semibold text-white/90 text-[9px] pl-0.5 mt-0.5 leading-tight">{student.faculte}</p>
             </div>
+            
+            {/* Champ Promotion avec bande */}
             <div>
-              <p className="text-secondary/70 text-[7px] uppercase">Promotion</p>
-              <p className="font-semibold text-white/90">{student.promotion}</p>
+              <div className="bg-gradient-to-r from-secondary/90 to-secondary/70 rounded px-1.5 py-0.5 inline-block shadow-sm">
+                <p className="text-[7px] font-bold text-slate-900 uppercase tracking-wide">Promotion</p>
+              </div>
+              <p className="font-semibold text-white/90 text-[9px] pl-0.5 mt-0.5 leading-tight">{student.promotion}</p>
             </div>
-          </div>
-          <div>
-            <p className="text-secondary/70 text-[7px] uppercase">Année</p>
-            <p className="font-semibold text-white/90 text-[9px]">{student.anneeAcademique}</p>
+            
+            {/* Champ Année avec bande */}
+            <div>
+              <div className="bg-gradient-to-r from-secondary/90 to-secondary/70 rounded px-1.5 py-0.5 inline-block shadow-sm">
+                <p className="text-[7px] font-bold text-slate-900 uppercase tracking-wide">Année</p>
+              </div>
+              <p className="font-semibold text-white/90 text-[9px] pl-0.5 mt-0.5 leading-tight">{student.anneeAcademique}</p>
+            </div>
           </div>
         </div>
 
@@ -511,14 +526,22 @@ const StudentCard = ({ student, institution, template, side = "recto" }: Student
         )}
       </div>
 
-      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/50 to-transparent py-2 px-3">
+      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent py-2 px-3">
         <div className="flex justify-between items-end">
-          <div className="text-[7px]">
-            <p className="text-secondary/80">{institution.mentionSignature}</p>
+          {/* Mention signature avec bande */}
+          <div>
+            <div className="bg-gradient-to-r from-secondary/90 to-secondary/70 rounded px-1.5 py-0.5 inline-block shadow-sm mb-0.5">
+              <p className="text-[6px] font-bold text-slate-900 uppercase tracking-wide">{institution.mentionSignature.split(' ')[0] || 'Recteur'}</p>
+            </div>
+            <p className="text-[7px] text-secondary/90 font-medium pl-0.5">{institution.mentionSignature}</p>
           </div>
+          
+          {/* Date expiration avec bande */}
           <div className="text-right">
-            <p className="text-[6px] text-white/60">Expire le</p>
-            <p className="text-xs font-bold text-secondary">{student.dateExpiration}</p>
+            <div className="bg-gradient-to-r from-secondary/90 to-secondary/70 rounded px-1.5 py-0.5 inline-block shadow-sm mb-0.5">
+              <p className="text-[6px] font-bold text-slate-900 uppercase tracking-wide">Expire le</p>
+            </div>
+            <p className="text-xs font-bold text-secondary pr-0.5">{student.dateExpiration}</p>
           </div>
         </div>
       </div>
