@@ -259,39 +259,39 @@ const renderClassicRecto = async (
   doc.setFillColor(...colors.primary);
   doc.rect(1.5, 1.5, width - 3, 11, "F");
 
-  // Logo gauche dans cercle blanc rempli - logo agrandi pour remplir le cercle (comme le verso)
+  // Logo gauche dans cercle blanc - logo agrandi pour REMPLIR TOTALEMENT le cercle
   doc.setFillColor(255, 255, 255);
   doc.circle(8, 7, 5.5, "F");
   if (institution.logoGauche) {
     try {
-      // Logo agrandi pour remplir tout le cercle - mêmes proportions que le verso
-      doc.addImage(institution.logoGauche, "PNG", 2, 1, 12, 12);
+      // Logo centré dans le cercle - dimensions maximales pour remplir
+      doc.addImage(institution.logoGauche, "PNG", 2.5, 1.5, 11, 11);
     } catch (e) {}
   }
 
-  // Logo droite dans cercle blanc rempli - logo agrandi pour remplir le cercle (comme le verso)
+  // Logo droite dans cercle blanc - logo agrandi pour REMPLIR TOTALEMENT le cercle
   doc.setFillColor(255, 255, 255);
   doc.circle(width - 8, 7, 5.5, "F");
   if (institution.logoDroite) {
     try {
-      doc.addImage(institution.logoDroite, "PNG", width - 14, 1, 12, 12);
+      doc.addImage(institution.logoDroite, "PNG", width - 13.5, 1.5, 11, 11);
     } catch (e) {}
   } else if (institution.logoGauche) {
     try {
-      doc.addImage(institution.logoGauche, "PNG", width - 14, 1, 12, 12);
+      doc.addImage(institution.logoGauche, "PNG", width - 13.5, 1.5, 11, 11);
     } catch (e) {}
   }
 
-  // Texte en-tête - titre ENSEIGNEMENT SUPÉRIEUR plus grand (hiérarchie)
+  // Texte en-tête - titre ENSEIGNEMENT SUPÉRIEUR PLUS GRAND (hiérarchie claire)
   doc.setTextColor(255, 255, 255);
-  doc.setFontSize(5);
+  doc.setFontSize(5.5);
   doc.setFont("helvetica", "bold");
   const tutelleParts = institution.tutelle.split("–");
   doc.text(tutelleParts[0]?.trim() || "ENSEIGNEMENT SUPÉRIEUR ET UNIVERSITAIRE", width / 2, 4, { align: "center" });
 
-  // Nom institution - légèrement plus petit que le titre principal
+  // Nom institution - PLUS PETIT que le titre principal (hiérarchie)
   doc.setTextColor(255, 255, 255);
-  doc.setFontSize(4);
+  doc.setFontSize(3.5);
   doc.setFont("helvetica", "bold");
   doc.text(institution.nom.substring(0, 45), width / 2, 7.5, { align: "center" });
 
