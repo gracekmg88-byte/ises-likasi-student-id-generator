@@ -379,13 +379,6 @@ const StudentCard = ({ student, institution, template, side = "recto" }: Student
             </p>
           </div>
           
-          {/* Matricule - uniquement pour le modèle Advanced */}
-          {student.matricule && (
-            <div className="bg-gradient-to-r from-secondary/20 to-transparent rounded-lg px-2 py-0.5">
-              <p className="text-[7px] text-secondary uppercase tracking-wide font-bold">Matricule</p>
-              <p className="font-bold text-[10px] text-foreground">{student.matricule}</p>
-            </div>
-          )}
           
           <div className="grid grid-cols-2 gap-2 text-[9px]">
             <div>

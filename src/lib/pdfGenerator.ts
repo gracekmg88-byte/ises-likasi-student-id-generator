@@ -315,8 +315,8 @@ const renderClassicRecto = async (
       doc.setDrawColor(...colors.primary);
       doc.setLineWidth(0.5);
       doc.rect(photoX - 0.5, photoY - 0.5, photoW + 1, photoH + 1);
-      // Photo avec compression minimale pour conserver la qualité
-      doc.addImage(student.photo, "JPEG", photoX, photoY, photoW, photoH, undefined, "FAST");
+      // Photo avec compression normale (modèle classique - qualité réduite)
+      doc.addImage(student.photo, "JPEG", photoX, photoY, photoW, photoH, undefined, "MEDIUM");
     } catch (e) {}
   }
 
@@ -474,7 +474,8 @@ const renderModernRecto = async (
     try {
       doc.setFillColor(...colors.primary);
       doc.roundedRect(photoX - 0.5, photoY - 0.5, 19, 23, 1, 1, "F");
-      doc.addImage(student.photo, "JPEG", photoX, photoY, 18, 22, undefined, "FAST");
+      // Photo avec compression normale (modèle moderne - qualité réduite)
+      doc.addImage(student.photo, "JPEG", photoX, photoY, 18, 22, undefined, "MEDIUM");
     } catch (e) {}
   }
 
@@ -644,7 +645,8 @@ const renderAdvancedRecto = async (
     try {
       doc.setFillColor(...colors.secondary);
       doc.roundedRect(photoX - 0.5, photoY - 0.5, 19, 23, 0.8, 0.8, "F");
-      doc.addImage(student.photo, "JPEG", photoX, photoY, 18, 22, undefined, "FAST");
+      // Photo haute qualité (modèle Advanced)
+      doc.addImage(student.photo, "JPEG", photoX, photoY, 18, 22, undefined, "NONE");
     } catch (e) {}
   }
 
@@ -670,22 +672,6 @@ const renderAdvancedRecto = async (
 
   infoY += nameLines.length > 1 ? 9 : 7;
 
-  // MATRICULE - uniquement pour le modèle Advanced
-  if (student.matricule) {
-    doc.setFillColor(...colors.secondary);
-    doc.roundedRect(infoX, infoY - 2, 16, 3.5, 0.5, 0.5, "F");
-    doc.setTextColor(...colors.textDark);
-    doc.setFontSize(3.2);
-    doc.setFont("helvetica", "bold");
-    doc.text("MATRICULE", infoX + 1.5, infoY + 0.3);
-
-    doc.setTextColor(...colors.textDark);
-    doc.setFontSize(4.5);
-    doc.setFont("helvetica", "bold");
-    doc.text(student.matricule.substring(0, 18), infoX, infoY + 5);
-
-    infoY += 7;
-  }
 
   // Label FACULTÉ
   doc.setFillColor(...colors.secondary);
@@ -831,7 +817,8 @@ const renderPremiumRecto = async (
     try {
       doc.setFillColor(...colors.secondary);
       doc.roundedRect(photoX - 0.5, photoY - 0.5, 19, 23, 0.8, 0.8, "F");
-      doc.addImage(student.photo, "JPEG", photoX, photoY, 18, 22, undefined, "FAST");
+      // Photo haute qualité (modèle Premium)
+      doc.addImage(student.photo, "JPEG", photoX, photoY, 18, 22, undefined, "NONE");
     } catch (e) {}
   }
 

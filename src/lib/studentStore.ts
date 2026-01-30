@@ -210,7 +210,25 @@ export const updateStudent = async (id: string, updates: Partial<Student>): Prom
 };
 
 export const clearAllStudents = (): void => {
+  // Supprimer toutes les données étudiants
   localStorage.removeItem(STORAGE_KEY);
+  
+  // Nettoyer également les clés temporaires ou de cache
+  const keysToRemove: string[] = [];
+  for (const key in localStorage) {
+    if (key.startsWith('temp_') || key.startsWith('cache_') || key.startsWith('draft_')) {
+      keysToRemove.push(key);
+    }
+  }
+  keysToRemove.forEach(key => localStorage.removeItem(key));
+  
+  // Force le garbage collector en écrivant puis supprimant une donnée vide
+  try {
+    localStorage.setItem(STORAGE_KEY, '[]');
+    localStorage.removeItem(STORAGE_KEY);
+  } catch (e) {
+    // Ignorer les erreurs
+  }
 };
 
 export const getStorageInfo = (): { studentCount: number; usedKB: number; percentage: number; availableKB: number } => {
