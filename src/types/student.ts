@@ -12,6 +12,7 @@ export interface Student {
   customQrCode?: string;
   institutionId?: string;
   qrPosition?: 'recto' | 'verso';
+  matricule?: string;
 }
 
 export interface Institution {
@@ -33,6 +34,7 @@ export interface Admin {
   password: string;
   nom: string;
   dateCreation: string;
+  photoProfile?: string;
 }
 
 export interface AppUser {

@@ -608,15 +608,32 @@ const renderAdvancedRecto = async (
   doc.setFont("helvetica", "bold");
   doc.text(`${student.nom} ${student.prenom}`.substring(0, 20), infoX, infoY + 5);
 
-  infoY += 9;
+  infoY += 8;
+
+  // MATRICULE - uniquement pour le modèle Advanced
+  if (student.matricule) {
+    doc.setFillColor(...colors.secondary);
+    doc.roundedRect(infoX, infoY - 1.5, 16, 3.5, 0.4, 0.4, "F");
+    doc.setTextColor(...colors.textDark);
+    doc.setFontSize(3);
+    doc.setFont("helvetica", "bold");
+    doc.text("MATRICULE", infoX + 1, infoY + 0.5);
+
+    doc.setTextColor(...colors.textDark);
+    doc.setFontSize(5);
+    doc.setFont("helvetica", "bold");
+    doc.text(student.matricule.substring(0, 20), infoX, infoY + 5);
+
+    infoY += 7;
+  }
 
   // Label FACULTÉ
   doc.setFillColor(...colors.secondary);
-  doc.roundedRect(infoX, infoY - 2, 12, 3.5, 0.4, 0.4, "F");
+  doc.roundedRect(infoX, infoY - 1.5, 12, 3.5, 0.4, 0.4, "F");
   doc.setTextColor(...colors.textDark);
   doc.setFontSize(3);
   doc.setFont("helvetica", "bold");
-  doc.text("FACULTÉ", infoX + 1, infoY + 0.3);
+  doc.text("FACULTÉ", infoX + 1, infoY + 0.5);
 
   // Valeur FACULTÉ
   doc.setTextColor(...colors.textDark);
@@ -624,22 +641,22 @@ const renderAdvancedRecto = async (
   doc.setFont("helvetica", "bold");
   doc.text(student.faculte.substring(0, 28), infoX, infoY + 5);
 
-  infoY += 9;
+  infoY += 7;
 
   // Labels PROMOTION et ANNÉE
   doc.setFillColor(...colors.secondary);
-  doc.roundedRect(infoX, infoY - 2, 16, 3.5, 0.4, 0.4, "F");
+  doc.roundedRect(infoX, infoY - 1.5, 16, 3.5, 0.4, 0.4, "F");
   doc.setTextColor(...colors.textDark);
   doc.setFontSize(3);
   doc.setFont("helvetica", "bold");
-  doc.text("PROMOTION", infoX + 1, infoY + 0.3);
+  doc.text("PROMOTION", infoX + 1, infoY + 0.5);
 
   doc.setFillColor(...colors.secondary);
-  doc.roundedRect(infoX + 22, infoY - 2, 12, 3.5, 0.4, 0.4, "F");
+  doc.roundedRect(infoX + 22, infoY - 1.5, 12, 3.5, 0.4, 0.4, "F");
   doc.setTextColor(...colors.textDark);
   doc.setFontSize(3);
   doc.setFont("helvetica", "bold");
-  doc.text("ANNÉE", infoX + 23, infoY + 0.3);
+  doc.text("ANNÉE", infoX + 23, infoY + 0.5);
 
   // Valeurs
   doc.setTextColor(...colors.textDark);

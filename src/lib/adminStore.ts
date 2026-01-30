@@ -79,6 +79,10 @@ export const updateAdmin = (id: string, updates: Partial<Admin>): Admin | undefi
   return admins[index];
 };
 
+export const updateAdminPhoto = (id: string, photoProfile: string): Admin | undefined => {
+  return updateAdmin(id, { photoProfile });
+};
+
 export const deleteAdmin = (id: string): boolean => {
   const admins = getAdmins();
   
