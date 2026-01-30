@@ -260,47 +260,63 @@ const renderClassicRecto = async (
     } catch (e) {}
   }
 
-  // Informations
+  // Informations avec labels jaunes
   const infoX = 26;
-  let infoY = 20;
-  const grayLight: [number, number, number] = [107, 114, 128];
+  let infoY = 19;
 
-  doc.setTextColor(...grayLight);
-  doc.setFontSize(2.8);
-  doc.setFont("helvetica", "normal");
-  doc.text("Noms", infoX, infoY);
+  // Label NOMS
+  doc.setFillColor(...colors.secondary);
+  doc.roundedRect(infoX, infoY - 1.5, 8, 2.5, 0.3, 0.3, "F");
+  doc.setTextColor(...colors.primary);
+  doc.setFontSize(2.2);
+  doc.setFont("helvetica", "bold");
+  doc.text("Noms", infoX + 0.8, infoY);
 
+  // Valeur NOMS
   doc.setTextColor(...colors.accent);
   doc.setFontSize(5);
   doc.setFont("helvetica", "bold");
-  infoY += 3;
-  doc.text(`${student.nom} ${student.prenom}`, infoX, infoY);
+  doc.text(`${student.nom} ${student.prenom}`, infoX, infoY + 4);
 
-  infoY += 5;
-  doc.setTextColor(...grayLight);
-  doc.setFontSize(2.8);
-  doc.setFont("helvetica", "normal");
-  doc.text("Faculté", infoX, infoY);
+  infoY += 8;
 
+  // Label FACULTÉ
+  doc.setFillColor(...colors.secondary);
+  doc.roundedRect(infoX, infoY - 1.5, 10, 2.5, 0.3, 0.3, "F");
+  doc.setTextColor(...colors.primary);
+  doc.setFontSize(2.2);
+  doc.setFont("helvetica", "bold");
+  doc.text("Faculté", infoX + 0.8, infoY);
+
+  // Valeur FACULTÉ
   doc.setTextColor(...colors.accent);
   doc.setFontSize(4);
   doc.setFont("helvetica", "bold");
-  infoY += 3;
-  doc.text(student.faculte, infoX, infoY);
+  doc.text(student.faculte, infoX, infoY + 4);
 
-  infoY += 5;
-  doc.setTextColor(...grayLight);
-  doc.setFontSize(2.8);
-  doc.setFont("helvetica", "normal");
-  doc.text("Promotion", infoX, infoY);
-  doc.text("Année", infoX + 20, infoY);
+  infoY += 8;
 
+  // Labels PROMOTION et ANNÉE
+  doc.setFillColor(...colors.secondary);
+  doc.roundedRect(infoX, infoY - 1.5, 14, 2.5, 0.3, 0.3, "F");
+  doc.setTextColor(...colors.primary);
+  doc.setFontSize(2.2);
+  doc.setFont("helvetica", "bold");
+  doc.text("Promotion", infoX + 0.8, infoY);
+
+  doc.setFillColor(...colors.secondary);
+  doc.roundedRect(infoX + 20, infoY - 1.5, 10, 2.5, 0.3, 0.3, "F");
+  doc.setTextColor(...colors.primary);
+  doc.setFontSize(2.2);
+  doc.setFont("helvetica", "bold");
+  doc.text("Année", infoX + 20.8, infoY);
+
+  // Valeurs PROMOTION et ANNÉE
   doc.setTextColor(...colors.accent);
   doc.setFontSize(4);
   doc.setFont("helvetica", "bold");
-  infoY += 3;
-  doc.text(student.promotion, infoX, infoY);
-  doc.text(student.anneeAcademique, infoX + 20, infoY);
+  doc.text(student.promotion, infoX, infoY + 4);
+  doc.text(student.anneeAcademique, infoX + 20, infoY + 4);
 
   // QR Code (si pas au verso)
   if (!qrOnVerso && qrDataUrl) {
@@ -316,18 +332,28 @@ const renderClassicRecto = async (
   doc.setLineWidth(0.1);
   doc.line(0, height - 10, width, height - 10);
 
-  doc.setTextColor(...grayLight);
-  doc.setFontSize(2.5);
-  doc.setFont("helvetica", "normal");
-  doc.text(institution.mentionSignature, 6, height - 6);
+  // Label Signature
+  doc.setFillColor(...colors.secondary);
+  doc.roundedRect(4, height - 8, 10, 2.5, 0.3, 0.3, "F");
+  doc.setTextColor(...colors.primary);
+  doc.setFontSize(2);
+  doc.setFont("helvetica", "bold");
+  doc.text("Recteur", 4.8, height - 6.2);
+  doc.setTextColor(...colors.accent);
+  doc.setFontSize(3);
+  doc.text(institution.mentionSignature, 4, height - 3);
 
-  doc.setTextColor(...grayLight);
-  doc.setFontSize(2.5);
-  doc.text("Date d'expiration", width - 22, height - 6);
+  // Label Expiration
+  doc.setFillColor(...colors.secondary);
+  doc.roundedRect(width - 28, height - 8, 12, 2.5, 0.3, 0.3, "F");
+  doc.setTextColor(...colors.primary);
+  doc.setFontSize(2);
+  doc.setFont("helvetica", "bold");
+  doc.text("Expire le", width - 27.5, height - 6.2);
   doc.setTextColor(...colors.primary);
   doc.setFontSize(4.5);
   doc.setFont("helvetica", "bold");
-  doc.text(student.dateExpiration, width - 22, height - 2.5);
+  doc.text(student.dateExpiration, width - 28, height - 2.5);
 };
 
 // ===== RECTO MODERNE =====
@@ -381,48 +407,63 @@ const renderModernRecto = async (
     } catch (e) {}
   }
 
-  // Infos
+  // Informations avec labels jaunes
   const infoX = 27;
   let infoY = 16;
 
+  // Label NOMS
+  doc.setFillColor(...colors.secondary);
+  doc.roundedRect(infoX, infoY - 1.5, 8, 2.5, 0.3, 0.3, "F");
   doc.setTextColor(...colors.primary);
-  doc.setFontSize(6);
+  doc.setFontSize(2.2);
   doc.setFont("helvetica", "bold");
-  doc.text(student.nom, infoX, infoY);
-  infoY += 3.5;
-  doc.setFontSize(4.5);
-  doc.setFont("helvetica", "normal");
-  doc.text(student.prenom, infoX, infoY);
+  doc.text("Noms", infoX + 0.8, infoY);
 
-  infoY += 5;
-  const grayLight: [number, number, number] = [107, 114, 128];
-  doc.setTextColor(...grayLight);
-  doc.setFontSize(2.5);
-  doc.text("Faculté", infoX, infoY);
+  // Valeur NOMS
+  doc.setTextColor(...colors.primary);
+  doc.setFontSize(5);
+  doc.setFont("helvetica", "bold");
+  doc.text(`${student.nom} ${student.prenom}`, infoX, infoY + 4);
+
+  infoY += 8;
+
+  // Label FACULTÉ
+  doc.setFillColor(...colors.secondary);
+  doc.roundedRect(infoX, infoY - 1.5, 10, 2.5, 0.3, 0.3, "F");
+  doc.setTextColor(...colors.primary);
+  doc.setFontSize(2.2);
+  doc.setFont("helvetica", "bold");
+  doc.text("Faculté", infoX + 0.8, infoY);
+
+  // Valeur FACULTÉ
   doc.setTextColor(...colors.accent);
   doc.setFontSize(3.5);
   doc.setFont("helvetica", "bold");
-  doc.text(student.faculte, infoX + 12, infoY);
+  doc.text(student.faculte, infoX, infoY + 4);
 
-  infoY += 3.5;
-  doc.setTextColor(...grayLight);
-  doc.setFontSize(2.5);
-  doc.setFont("helvetica", "normal");
-  doc.text("Promo", infoX, infoY);
+  infoY += 8;
+
+  // Labels PROMOTION et ANNÉE
+  doc.setFillColor(...colors.secondary);
+  doc.roundedRect(infoX, infoY - 1.5, 14, 2.5, 0.3, 0.3, "F");
+  doc.setTextColor(...colors.primary);
+  doc.setFontSize(2.2);
+  doc.setFont("helvetica", "bold");
+  doc.text("Promotion", infoX + 0.8, infoY);
+
+  doc.setFillColor(...colors.secondary);
+  doc.roundedRect(infoX + 20, infoY - 1.5, 10, 2.5, 0.3, 0.3, "F");
+  doc.setTextColor(...colors.primary);
+  doc.setFontSize(2.2);
+  doc.setFont("helvetica", "bold");
+  doc.text("Année", infoX + 20.8, infoY);
+
+  // Valeurs PROMOTION et ANNÉE
   doc.setTextColor(...colors.accent);
   doc.setFontSize(3.5);
   doc.setFont("helvetica", "bold");
-  doc.text(student.promotion, infoX + 12, infoY);
-
-  infoY += 3.5;
-  doc.setTextColor(...grayLight);
-  doc.setFontSize(2.5);
-  doc.setFont("helvetica", "normal");
-  doc.text("Année", infoX, infoY);
-  doc.setTextColor(...colors.accent);
-  doc.setFontSize(3.5);
-  doc.setFont("helvetica", "bold");
-  doc.text(student.anneeAcademique, infoX + 12, infoY);
+  doc.text(student.promotion, infoX, infoY + 4);
+  doc.text(student.anneeAcademique, infoX + 20, infoY + 4);
 
   // QR
   if (!qrOnVerso && qrDataUrl) {
@@ -437,13 +478,28 @@ const renderModernRecto = async (
   doc.setDrawColor(226, 232, 240);
   doc.line(0, height - 6, width, height - 6);
 
-  doc.setTextColor(...grayLight);
+  // Label Signature
+  doc.setFillColor(...colors.secondary);
+  doc.roundedRect(4, height - 5, 10, 2, 0.3, 0.3, "F");
+  doc.setTextColor(...colors.primary);
+  doc.setFontSize(2);
+  doc.setFont("helvetica", "bold");
+  doc.text("Recteur", 4.8, height - 3.5);
+  doc.setTextColor(...colors.accent);
   doc.setFontSize(2.5);
-  doc.text(institution.mentionSignature, 5, height - 2.5);
+  doc.text(institution.mentionSignature, 4, height - 1);
+
+  // Label Expiration
+  doc.setFillColor(...colors.secondary);
+  doc.roundedRect(width - 22, height - 5, 12, 2, 0.3, 0.3, "F");
+  doc.setTextColor(...colors.primary);
+  doc.setFontSize(2);
+  doc.setFont("helvetica", "bold");
+  doc.text("Expire le", width - 21.5, height - 3.5);
   doc.setTextColor(...colors.primary);
   doc.setFontSize(3.5);
   doc.setFont("helvetica", "bold");
-  doc.text(`Exp: ${student.dateExpiration}`, width - 5, height - 2.5, { align: "right" });
+  doc.text(student.dateExpiration, width - 22, height - 1);
 };
 
 // ===== RECTO AVANCÉ =====
@@ -508,43 +564,63 @@ const renderAdvancedRecto = async (
     } catch (e) {}
   }
 
-  // Infos stylisées
+  // Informations avec labels jaunes
   const infoX = 26;
   let infoY = 18;
-  const grayLight: [number, number, number] = [107, 114, 128];
 
-  // Nom avec fond
-  doc.setFillColor(colors.primary[0], colors.primary[1], colors.primary[2]);
-  doc.roundedRect(infoX - 1, infoY - 2.5, 35, 7, 0.5, 0.5, "F");
-  doc.setTextColor(255, 255, 255);
-  doc.setFontSize(2.5);
-  doc.setFont("helvetica", "normal");
-  doc.text("NOMS", infoX, infoY);
+  // Label NOMS
+  doc.setFillColor(...colors.secondary);
+  doc.roundedRect(infoX, infoY - 1.5, 8, 2.5, 0.3, 0.3, "F");
+  doc.setTextColor(...colors.primary);
+  doc.setFontSize(2.2);
+  doc.setFont("helvetica", "bold");
+  doc.text("Noms", infoX + 0.8, infoY);
+
+  // Valeur NOMS
+  doc.setTextColor(...colors.accent);
   doc.setFontSize(5);
   doc.setFont("helvetica", "bold");
-  doc.text(`${student.nom} ${student.prenom}`.substring(0, 25), infoX, infoY + 3.5);
+  doc.text(`${student.nom} ${student.prenom}`.substring(0, 25), infoX, infoY + 4);
 
-  infoY += 10;
-  doc.setTextColor(...grayLight);
-  doc.setFontSize(2.5);
-  doc.setFont("helvetica", "normal");
-  doc.text("Faculté", infoX, infoY);
+  infoY += 8;
+
+  // Label FACULTÉ
+  doc.setFillColor(...colors.secondary);
+  doc.roundedRect(infoX, infoY - 1.5, 10, 2.5, 0.3, 0.3, "F");
+  doc.setTextColor(...colors.primary);
+  doc.setFontSize(2.2);
+  doc.setFont("helvetica", "bold");
+  doc.text("Faculté", infoX + 0.8, infoY);
+
+  // Valeur FACULTÉ
   doc.setTextColor(...colors.accent);
   doc.setFontSize(3.5);
   doc.setFont("helvetica", "bold");
-  doc.text(student.faculte, infoX, infoY + 3);
+  doc.text(student.faculte, infoX, infoY + 4);
 
-  infoY += 7;
-  doc.setTextColor(...grayLight);
-  doc.setFontSize(2.5);
-  doc.setFont("helvetica", "normal");
-  doc.text("Promotion", infoX, infoY);
-  doc.text("Année", infoX + 18, infoY);
+  infoY += 8;
+
+  // Labels PROMOTION et ANNÉE
+  doc.setFillColor(...colors.secondary);
+  doc.roundedRect(infoX, infoY - 1.5, 14, 2.5, 0.3, 0.3, "F");
+  doc.setTextColor(...colors.primary);
+  doc.setFontSize(2.2);
+  doc.setFont("helvetica", "bold");
+  doc.text("Promotion", infoX + 0.8, infoY);
+
+  doc.setFillColor(...colors.secondary);
+  doc.roundedRect(infoX + 20, infoY - 1.5, 10, 2.5, 0.3, 0.3, "F");
+  doc.setTextColor(...colors.primary);
+  doc.setFontSize(2.2);
+  doc.setFont("helvetica", "bold");
+  doc.text("Année", infoX + 20.8, infoY);
+
+  // Valeurs PROMOTION et ANNÉE
   doc.setTextColor(...colors.accent);
   doc.setFontSize(3.5);
   doc.setFont("helvetica", "bold");
-  doc.text(student.promotion, infoX, infoY + 3);
-  doc.text(student.anneeAcademique, infoX + 18, infoY + 3);
+  doc.text(student.promotion, infoX, infoY + 4);
+  doc.text(student.anneeAcademique, infoX + 20, infoY + 4);
 
   // QR avec effet
   if (!qrOnVerso && qrDataUrl) {
@@ -559,18 +635,28 @@ const renderAdvancedRecto = async (
   doc.setFillColor(240, 245, 255);
   doc.rect(0, height - 8, width, 8, "F");
 
-  doc.setTextColor(...grayLight);
+  // Label Signature
+  doc.setFillColor(...colors.secondary);
+  doc.roundedRect(4, height - 7, 10, 2.5, 0.3, 0.3, "F");
+  doc.setTextColor(...colors.primary);
+  doc.setFontSize(2);
+  doc.setFont("helvetica", "bold");
+  doc.text("Recteur", 4.8, height - 5.2);
+  doc.setTextColor(...colors.accent);
   doc.setFontSize(2.5);
-  doc.text(institution.mentionSignature, 5, height - 5);
+  doc.text(institution.mentionSignature, 4, height - 2);
 
-  doc.setTextColor(...grayLight);
-  doc.setFontSize(2.5);
-  doc.setFont("helvetica", "normal");
-  doc.text("Expiration", width - 20, height - 5);
+  // Label Expiration
+  doc.setFillColor(...colors.secondary);
+  doc.roundedRect(width - 26, height - 7, 12, 2.5, 0.3, 0.3, "F");
+  doc.setTextColor(...colors.primary);
+  doc.setFontSize(2);
+  doc.setFont("helvetica", "bold");
+  doc.text("Expire le", width - 25.5, height - 5.2);
   doc.setTextColor(...colors.primary);
   doc.setFontSize(5);
   doc.setFont("helvetica", "bold");
-  doc.text(student.dateExpiration, width - 20, height - 1.5);
+  doc.text(student.dateExpiration, width - 26, height - 1.5);
 };
 
 // ===== RECTO PREMIUM =====
