@@ -638,15 +638,15 @@ const renderAdvancedRecto = async (
   doc.setFont("helvetica", "bold");
   doc.text(institution.nom.substring(0, 48), width / 2, 16, { align: "center" });
 
-  // Photo avec cadre doré
+  // Photo avec cadre doré - qualité maximale
   const photoX = 4;
   const photoY = 19;
   if (student.photo) {
     try {
       doc.setFillColor(...colors.secondary);
       doc.roundedRect(photoX - 0.5, photoY - 0.5, 19, 23, 0.8, 0.8, "F");
-      // Photo haute qualité (modèle Advanced)
-      doc.addImage(student.photo, "JPEG", photoX, photoY, 18, 22, undefined, "NONE");
+      // Photo qualité maximale (modèle Advanced) - FAST = pas de compression, rendu optimal
+      doc.addImage(student.photo, "JPEG", photoX, photoY, 18, 22, undefined, "FAST");
     } catch (e) {}
   }
 
@@ -810,15 +810,15 @@ const renderPremiumRecto = async (
   doc.setFont("helvetica", "bold");
   doc.text("CARTE D'ÉTUDIANT", width / 2, 14, { align: "center" });
 
-  // Photo avec cadre doré
+  // Photo avec cadre doré - qualité maximale
   const photoX = 4;
   const photoY = 18;
   if (student.photo) {
     try {
       doc.setFillColor(...colors.secondary);
       doc.roundedRect(photoX - 0.5, photoY - 0.5, 19, 23, 0.8, 0.8, "F");
-      // Photo haute qualité (modèle Premium)
-      doc.addImage(student.photo, "JPEG", photoX, photoY, 18, 22, undefined, "NONE");
+      // Photo qualité maximale (modèle Premium) - FAST = pas de compression, rendu optimal
+      doc.addImage(student.photo, "JPEG", photoX, photoY, 18, 22, undefined, "FAST");
     } catch (e) {}
   }
 
