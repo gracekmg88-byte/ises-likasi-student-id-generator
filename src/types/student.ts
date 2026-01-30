@@ -43,7 +43,20 @@ export interface AppUser {
   isPremium: boolean;
   dateCreation: string;
   dateActivation?: string;
-  trialEndDate: string;
+  // Système de crédits de cartes
+  cardsGenerated: number;        // Cartes générées (essai + premium)
+  cardsQuota: number;            // Quota total de cartes autorisées (0 = essai gratuit)
+  freeTrialUsed: number;         // Cartes utilisées pendant l'essai (max 3)
+}
+
+export interface PaymentSettings {
+  mobileMoneyNumber: string;
+  mobileMoneyBeneficiary: string;
+  bankName: string;
+  bankAccountUSD: string;
+  bankAccountCDF: string;
+  bankBeneficiary: string;
+  whatsappNumber: string;
 }
 
 export interface CardTemplate {

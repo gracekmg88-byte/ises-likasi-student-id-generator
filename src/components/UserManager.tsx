@@ -1,9 +1,11 @@
 import { useState, useEffect } from "react";
 import { AppUser } from "@/types/student";
-import { getUsers, setUserPremium, deleteUser, getRemainingTrialDays, isTrialActive } from "@/lib/userStore";
+import { getUsers, setUserPremium, revokePremium, deleteUser, getRemainingCards, isFreeTrialExpired, canGenerateCard, updateUser, getFreeTrialLimit } from "@/lib/userStore";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { 
   Users, 
   Crown, 
@@ -11,7 +13,10 @@ import {
   Clock, 
   CheckCircle, 
   XCircle,
-  RefreshCw
+  RefreshCw,
+  CreditCard,
+  Plus,
+  Minus
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -25,9 +30,20 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogFooter,
+} from "@/components/ui/dialog";
 
 const UserManager = () => {
   const [users, setUsers] = useState<AppUser[]>([]);
+  const [selectedUser, setSelectedUser] = useState<AppUser | null>(null);
+  const [cardsToAdd, setCardsToAdd] = useState<number>(10);
+  const [dialogOpen, setDialogOpen] = useState(false);
 
   const refreshUsers = () => {
     setUsers(getUsers());
@@ -37,17 +53,24 @@ const UserManager = () => {
     refreshUsers();
   }, []);
 
-  const handleTogglePremium = (user: AppUser) => {
+  const handleAddCards = (user: AppUser) => {
     try {
-      setUserPremium(user.id, !user.isPremium);
+      setUserPremium(user.id, cardsToAdd);
       refreshUsers();
-      toast.success(
-        user.isPremium 
-          ? `${user.nom} est maintenant un utilisateur gratuit` 
-          : `${user.nom} est maintenant Premium !`
-      );
+      setDialogOpen(false);
+      toast.success(`${cardsToAdd} cartes ajoutées à ${user.nom}`);
     } catch (error) {
-      toast.error("Erreur lors de la modification");
+      toast.error("Erreur lors de l'ajout des cartes");
+    }
+  };
+
+  const handleRevokePremium = (user: AppUser) => {
+    try {
+      revokePremium(user.id);
+      refreshUsers();
+      toast.success(`Premium révoqué pour ${user.nom}`);
+    } catch (error) {
+      toast.error("Erreur lors de la révocation");
     }
   };
 
@@ -100,29 +123,30 @@ const UserManager = () => {
       <CardContent className="p-0">
         <div className="divide-y">
           {users.map((user) => {
-            const trialActive = isTrialActive(user);
-            const remainingDays = getRemainingTrialDays(user);
+            const trialExpired = isFreeTrialExpired(user);
+            const remainingCards = getRemainingCards(user);
+            const freeTrialLimit = getFreeTrialLimit();
             
             return (
               <div key={user.id} className="p-4 hover:bg-muted/50 transition-colors">
-                <div className="flex items-center justify-between gap-4">
+                <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
+                    <div className="flex items-center gap-2 mb-1 flex-wrap">
                       <p className="font-semibold truncate">{user.nom}</p>
                       {user.isPremium ? (
                         <Badge className="bg-gradient-to-r from-secondary to-secondary/80 text-secondary-foreground gap-1">
                           <Crown className="h-3 w-3" />
                           Premium
                         </Badge>
-                      ) : trialActive ? (
+                      ) : !trialExpired ? (
                         <Badge variant="outline" className="gap-1">
                           <Clock className="h-3 w-3" />
-                          Essai ({remainingDays}j)
+                          Essai ({user.freeTrialUsed}/{freeTrialLimit})
                         </Badge>
                       ) : (
                         <Badge variant="destructive" className="gap-1">
                           <XCircle className="h-3 w-3" />
-                          Expiré
+                          Essai terminé
                         </Badge>
                       )}
                     </div>
@@ -131,33 +155,113 @@ const UserManager = () => {
                     </p>
                     <p className="text-xs text-muted-foreground">
                       Inscrit le {formatDate(user.dateCreation)}
-                      {user.isPremium && user.dateActivation && (
-                        <span className="ml-2">
-                          • Premium depuis {formatDate(user.dateActivation)}
-                        </span>
-                      )}
                     </p>
+                    
+                    {/* Statistiques des cartes */}
+                    <div className="mt-2 flex items-center gap-4 text-xs">
+                      <div className="flex items-center gap-1">
+                        <CreditCard className="h-3 w-3 text-primary" />
+                        <span>
+                          {user.isPremium ? (
+                            <>
+                              <strong>{user.cardsGenerated}</strong> / {user.cardsQuota} cartes
+                            </>
+                          ) : (
+                            <>
+                              <strong>{user.freeTrialUsed}</strong> / {freeTrialLimit} essai
+                            </>
+                          )}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <span className={remainingCards > 0 ? "text-green-600" : "text-destructive"}>
+                          {remainingCards} restantes
+                        </span>
+                      </div>
+                    </div>
                   </div>
                   
-                  <div className="flex items-center gap-2">
-                    <Button
-                      variant={user.isPremium ? "outline" : "default"}
-                      size="sm"
-                      onClick={() => handleTogglePremium(user)}
-                      className={!user.isPremium ? "bg-secondary text-secondary-foreground hover:bg-secondary/90" : ""}
-                    >
-                      {user.isPremium ? (
-                        <>
-                          <XCircle className="h-4 w-4 mr-1" />
-                          Révoquer
-                        </>
-                      ) : (
-                        <>
-                          <Crown className="h-4 w-4 mr-1" />
-                          Activer Premium
-                        </>
-                      )}
-                    </Button>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <Dialog open={dialogOpen && selectedUser?.id === user.id} onOpenChange={(open) => {
+                      setDialogOpen(open);
+                      if (open) setSelectedUser(user);
+                    }}>
+                      <DialogTrigger asChild>
+                        <Button
+                          variant="default"
+                          size="sm"
+                          className="bg-secondary text-secondary-foreground hover:bg-secondary/90 gap-1"
+                        >
+                          <Plus className="h-4 w-4" />
+                          Ajouter cartes
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent>
+                        <DialogHeader>
+                          <DialogTitle>Ajouter un quota de cartes</DialogTitle>
+                        </DialogHeader>
+                        <div className="space-y-4 py-4">
+                          <p className="text-sm text-muted-foreground">
+                            Utilisateur : <strong>{user.nom}</strong>
+                          </p>
+                          <p className="text-sm text-muted-foreground">
+                            Quota actuel : <strong>{user.cardsQuota}</strong> cartes
+                          </p>
+                          <p className="text-sm text-muted-foreground">
+                            Déjà utilisées : <strong>{user.cardsGenerated}</strong> cartes
+                          </p>
+                          
+                          <div className="space-y-2">
+                            <Label>Nombre de cartes à ajouter</Label>
+                            <div className="flex items-center gap-2">
+                              <Button 
+                                variant="outline" 
+                                size="sm"
+                                onClick={() => setCardsToAdd(10)}
+                                className={cardsToAdd === 10 ? "border-primary" : ""}
+                              >
+                                10 (50$)
+                              </Button>
+                              <Button 
+                                variant="outline" 
+                                size="sm"
+                                onClick={() => setCardsToAdd(20)}
+                                className={cardsToAdd === 20 ? "border-primary" : ""}
+                              >
+                                20 (100$)
+                              </Button>
+                            </div>
+                            <Input
+                              type="number"
+                              min={1}
+                              value={cardsToAdd}
+                              onChange={(e) => setCardsToAdd(parseInt(e.target.value) || 1)}
+                              className="mt-2"
+                            />
+                          </div>
+                        </div>
+                        <DialogFooter>
+                          <Button variant="outline" onClick={() => setDialogOpen(false)}>
+                            Annuler
+                          </Button>
+                          <Button onClick={() => handleAddCards(user)}>
+                            <Plus className="h-4 w-4 mr-1" />
+                            Ajouter {cardsToAdd} cartes
+                          </Button>
+                        </DialogFooter>
+                      </DialogContent>
+                    </Dialog>
+
+                    {user.isPremium && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleRevokePremium(user)}
+                      >
+                        <XCircle className="h-4 w-4 mr-1" />
+                        Révoquer
+                      </Button>
+                    )}
                     
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
