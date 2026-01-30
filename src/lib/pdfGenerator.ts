@@ -128,25 +128,26 @@ const renderVerso = async (
   doc.setFillColor(...colors.primary);
   doc.rect(1.5, 1.5, width - 3, 9, "F");
 
-  // Logo gauche dans cercle blanc rempli
+  // Logo gauche dans cercle blanc rempli - logo agrandi pour remplir le cercle
   doc.setFillColor(255, 255, 255);
   doc.circle(7, 6, 4, "F");
   if (institution.logoGauche) {
     try {
-      doc.addImage(institution.logoGauche, "PNG", 3.5, 2.5, 7, 7);
+      // Logo agrandi pour remplir le cercle (rayon 4mm = diamètre 8mm)
+      doc.addImage(institution.logoGauche, "PNG", 3, 2, 8, 8);
     } catch (e) {}
   }
 
-  // Logo droite dans cercle blanc rempli
+  // Logo droite dans cercle blanc rempli - logo agrandi pour remplir le cercle
   doc.setFillColor(255, 255, 255);
   doc.circle(width - 7, 6, 4, "F");
   if (institution.logoDroite) {
     try {
-      doc.addImage(institution.logoDroite, "PNG", width - 10.5, 2.5, 7, 7);
+      doc.addImage(institution.logoDroite, "PNG", width - 11, 2, 8, 8);
     } catch (e) {}
   } else if (institution.logoGauche) {
     try {
-      doc.addImage(institution.logoGauche, "PNG", width - 10.5, 2.5, 7, 7);
+      doc.addImage(institution.logoGauche, "PNG", width - 11, 2, 8, 8);
     } catch (e) {}
   }
 
@@ -258,25 +259,26 @@ const renderClassicRecto = async (
   doc.setFillColor(...colors.primary);
   doc.rect(1.5, 1.5, width - 3, 11, "F");
 
-  // Logo gauche dans cercle blanc rempli
+  // Logo gauche dans cercle blanc rempli - logo agrandi pour remplir le cercle
   doc.setFillColor(255, 255, 255);
   doc.circle(8, 7, 5, "F");
   if (institution.logoGauche) {
     try {
-      doc.addImage(institution.logoGauche, "PNG", 4, 3, 8, 8);
+      // Logo agrandi pour remplir tout le cercle (rayon 5mm = diamètre 10mm)
+      doc.addImage(institution.logoGauche, "PNG", 3, 2, 10, 10);
     } catch (e) {}
   }
 
-  // Logo droite dans cercle blanc rempli
+  // Logo droite dans cercle blanc rempli - logo agrandi pour remplir le cercle
   doc.setFillColor(255, 255, 255);
   doc.circle(width - 8, 7, 5, "F");
   if (institution.logoDroite) {
     try {
-      doc.addImage(institution.logoDroite, "PNG", width - 12, 3, 8, 8);
+      doc.addImage(institution.logoDroite, "PNG", width - 13, 2, 10, 10);
     } catch (e) {}
   } else if (institution.logoGauche) {
     try {
-      doc.addImage(institution.logoGauche, "PNG", width - 12, 3, 8, 8);
+      doc.addImage(institution.logoGauche, "PNG", width - 13, 2, 10, 10);
     } catch (e) {}
   }
 
@@ -388,25 +390,26 @@ const renderClassicRecto = async (
     } catch (e) {}
   }
 
-  // Footer - Zone signature et expiration (SANS doublon)
+  // Footer - Zone signature et expiration (SANS texte additionnel sous les labels)
   const footerY = height - 8;
   
-  // Label signature à gauche - UNE SEULE FOIS
+  // Label signature à gauche - UNIQUEMENT le label jaune, pas de texte en dessous
   doc.setFillColor(...colors.secondary);
-  doc.roundedRect(4, footerY, 16, 3.2, 0.5, 0.5, "F");
+  doc.roundedRect(4, footerY, 18, 3.5, 0.5, 0.5, "F");
   doc.setTextColor(...colors.textDark);
-  doc.setFontSize(3);
+  doc.setFontSize(3.2);
   doc.setFont("helvetica", "bold");
-  doc.text(institution.mentionSignature.toUpperCase(), 5.5, footerY + 2);
+  doc.text(institution.mentionSignature.toUpperCase(), 5.5, footerY + 2.3);
 
   // Label EXPIRE LE à droite
   doc.setFillColor(...colors.secondary);
-  doc.roundedRect(width - 24, footerY, 18, 3.2, 0.5, 0.5, "F");
+  doc.roundedRect(width - 24, footerY, 18, 3.5, 0.5, 0.5, "F");
   doc.setTextColor(...colors.textDark);
-  doc.setFontSize(3);
+  doc.setFontSize(3.2);
   doc.setFont("helvetica", "bold");
-  doc.text("EXPIRE LE", width - 22.5, footerY + 2);
+  doc.text("EXPIRE LE", width - 22.5, footerY + 2.3);
 
+  // Date d'expiration en dessous du label
   doc.setTextColor(...colors.primary);
   doc.setFontSize(5.5);
   doc.setFont("helvetica", "bold");
