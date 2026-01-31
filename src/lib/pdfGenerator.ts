@@ -1,6 +1,40 @@
 import { jsPDF } from "jspdf";
 import QRCode from "qrcode";
 import { Student, Institution, CardTemplate } from "@/types/student";
+import { Filesystem, Directory } from "@capacitor/filesystem";
+import { Share } from "@capacitor/share";
+import { Capacitor } from "@capacitor/core";
+
+// Fonction utilitaire pour sauvegarder le PDF sur mobile ou web
+const savePDF = async (doc: jsPDF, fileName: string): Promise<void> => {
+  if (Capacitor.isNativePlatform()) {
+    // Sur mobile natif, utiliser Filesystem puis Share
+    try {
+      const pdfBase64 = doc.output("datauristring").split(",")[1];
+      
+      // Sauvegarder le fichier dans le cache
+      const result = await Filesystem.writeFile({
+        path: fileName,
+        data: pdfBase64,
+        directory: Directory.Cache,
+      });
+      
+      // Partager/ouvrir le fichier
+      await Share.share({
+        title: fileName,
+        url: result.uri,
+        dialogTitle: "Télécharger la carte PDF",
+      });
+    } catch (error) {
+      console.error("Erreur sauvegarde PDF mobile:", error);
+      // Fallback: essayer la méthode web standard
+      doc.save(fileName);
+    }
+  } else {
+    // Sur le web, utiliser la méthode standard
+    doc.save(fileName);
+  }
+};
 
 export const generateStudentCardPDF = async (
   student: Student,
@@ -101,7 +135,7 @@ export const generateStudentCardPDF = async (
   await renderVerso(doc, student, institution, colors, width, height, qrDataUrl, qrOnVerso);
 
   const fileName = `carte_${template.style}_${student.nom}_${student.prenom}.pdf`;
-  doc.save(fileName);
+  await savePDF(doc, fileName);
 };
 
 // ===== VERSO COMMUN - CORRESPONDANCE EXACTE AVEC L'APERÇU =====
