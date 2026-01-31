@@ -7,11 +7,21 @@ import { Capacitor } from "@capacitor/core";
 
 // Fonction utilitaire pour sauvegarder le PDF sur mobile ou web
 const savePDF = async (doc: jsPDF, fileName: string): Promise<void> => {
-  if (Capacitor.isNativePlatform()) {
+  const isNative = Capacitor.isNativePlatform();
+  console.log("savePDF appelé - isNative:", isNative);
+  
+  if (isNative) {
     // Sur mobile natif, utiliser Filesystem puis Share
     try {
-      const pdfBase64 = doc.output("datauristring").split(",")[1];
+      console.log("Génération du PDF en base64...");
+      const pdfOutput = doc.output("datauristring");
+      const pdfBase64 = pdfOutput.split(",")[1];
       
+      if (!pdfBase64) {
+        throw new Error("Échec de la génération du PDF base64");
+      }
+      
+      console.log("Sauvegarde dans le cache...");
       // Sauvegarder le fichier dans le cache
       const result = await Filesystem.writeFile({
         path: fileName,
@@ -19,19 +29,31 @@ const savePDF = async (doc: jsPDF, fileName: string): Promise<void> => {
         directory: Directory.Cache,
       });
       
+      console.log("Fichier sauvegardé:", result.uri);
+      
       // Partager/ouvrir le fichier
       await Share.share({
-        title: fileName,
+        title: "Carte Étudiant PDF",
         url: result.uri,
-        dialogTitle: "Télécharger la carte PDF",
+        dialogTitle: "Enregistrer ou partager la carte PDF",
       });
+      
+      console.log("Partage réussi");
     } catch (error) {
       console.error("Erreur sauvegarde PDF mobile:", error);
-      // Fallback: essayer la méthode web standard
-      doc.save(fileName);
+      // Fallback: créer un blob et ouvrir dans une nouvelle fenêtre
+      try {
+        const pdfBlob = doc.output("blob");
+        const blobUrl = URL.createObjectURL(pdfBlob);
+        window.open(blobUrl, "_blank");
+      } catch (fallbackError) {
+        console.error("Fallback échoué:", fallbackError);
+        alert("Impossible de générer le PDF. Veuillez réessayer.");
+      }
     }
   } else {
     // Sur le web, utiliser la méthode standard
+    console.log("Mode web - téléchargement direct");
     doc.save(fileName);
   }
 };
